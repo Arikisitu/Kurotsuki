@@ -1,0 +1,34 @@
+{
+  "name": "@sahasra/shared-types",
+  "version": "0.1.0",
+  "description": "Unified domain models and shared types for SAHASRA platform",
+  "author": "SAHASRA Core Team",
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./models/*": {
+      "types": "./dist/models/*.d.ts",
+      "import": "./dist/models/*.mjs",
+      "require": "./dist/models/*.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5"
+  }
+}

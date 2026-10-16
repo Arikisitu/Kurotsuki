@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #08090B;
+  --color-surface: #111318;
+  --color-elevated: #191C22;
+  --color-accent: #8585F7;
+  --color-accent-secondary: #AAA7FF;
+  --color-text-primary: #F5F5F7;
+  --color-text-secondary: #A0A3AE;
+  --color-border: #292C35;
+  --color-crimson: #E64B55;
+}
+
+@layer base {
+  * {
+    border-color: #292C35;
+  }
+  
+  html {
+    color-scheme: dark;
+    background-color: #08090B;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  body {
+    background-color: #08090B;
+    color: #F5F5F7;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Custom sleek scrollbar for media carousels and lists */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08090B;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #292C35;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8585F7;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism gradient accents */
+.glass-panel {
+  background: rgba(17, 19, 24, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(41, 44, 53, 0.7);
+}
+
+.glass-dropdown {
+  background: rgba(25, 28, 34, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(41, 44, 53, 0.9);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #A0A3AE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.accent-gradient {
+  background: linear-gradient(135deg, #8585F7 0%, #AAA7FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@sahasra/api-contracts",
+  "version": "0.1.0",
+  "description": "Standardized REST/RPC request/response contracts and endpoints for SAHASRA",
+  "author": "SAHASRA Core Team",
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./endpoints": {
+      "types": "./dist/endpoints.d.ts",
+      "import": "./dist/endpoints.mjs",
+      "require": "./dist/endpoints.js"
+    },
+    "./requests": {
+      "types": "./dist/requests.d.ts",
+      "import": "./dist/requests.mjs",
+      "require": "./dist/requests.js"
+    },
+    "./responses": {
+      "types": "./dist/responses.d.ts",
+      "import": "./dist/responses.mjs",
+      "require": "./dist/responses.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@sahasra/shared-types": "*"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="13.5"
+        android:translateY="13.5">
+        <!-- Central Lotus Petal -->
+        <path
+            android:fillColor="#E64B55"
+            android:pathData="M54,18 C50,34 40,48 54,76 C68,48 58,34 54,18 Z" />
+        <!-- Left Inner Petal -->
+        <path
+            android:fillColor="#8585F7"
+            android:pathData="M54,42 C40,42 30,52 32,68 C38,76 48,78 54,76 C48,64 48,50 54,42 Z" />
+        <!-- Right Inner Petal -->
+        <path
+            android:fillColor="#8585F7"
+            android:pathData="M54,42 C68,42 78,52 76,68 C70,76 60,78 54,76 C60,64 60,50 54,42 Z" />
+        <!-- Left Outer Petal -->
+        <path
+            android:fillColor="#AAA7FF"
+            android:pathData="M48,54 C32,52 20,60 22,74 C28,82 42,82 50,78 C42,70 42,60 48,54 Z" />
+        <!-- Right Outer Petal -->
+        <path
+            android:fillColor="#AAA7FF"
+            android:pathData="M60,54 C76,52 88,60 86,74 C80,82 66,82 58,78 C66,70 66,60 60,54 Z" />
+        <!-- Lotus Base Core -->
+        <path
+            android:fillColor="#E64B55"
+            android:pathData="M38,78 C46,84 62,84 70,78 C64,86 44,86 38,78 Z" />
+    </group>
+</vector>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SAHASRA Design Tokens -->
+    <color name="sahasra_bg">#08090B</color>
+    <color name="sahasra_surface">#111318</color>
+    <color name="sahasra_elevated">#191C22</color>
+    <color name="sahasra_accent">#8585F7</color>
+    <color name="sahasra_accent_secondary">#AAA7FF</color>
+    <color name="sahasra_text_primary">#F5F5F7</color>
+    <color name="sahasra_text_secondary">#A0A3AE</color>
+    <color name="sahasra_border">#292C35</color>
+    <color name="sahasra_crimson">#E64B55</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

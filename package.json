@@ -1,0 +1,32 @@
+{
+  "name": "sahasra-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SAHASRA - Premium Anime & Manga Discovery and Tracking Platform",
+  "author": "SAHASRA Core Team",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true
+  }
+}

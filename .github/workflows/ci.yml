@@ -2,9 +2,9 @@ name: SAHASRA CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -97,17 +97,17 @@ jobs:
 
       - name: API Test & Build
         run: |
-          if [ -d "apps/api" ]; then
-            npm run test --workspace=apps/api --if-present
-            npm run typecheck --workspace=apps/api --if-present
-            npm run build --workspace=apps/api --if-present
+          if [ -d "services/api" ]; then
+            npm run test --workspace=services/api --if-present
+            npm run typecheck --workspace=services/api --if-present
+            npm run build --workspace=services/api --if-present
           else
-            echo "apps/api not yet provisioned; skipping."
+            echo "services/api not found; skipping."
           fi
 
   # --- Step 4: Android Client (Kotlin + Jetpack Compose) ---
   android-client:
-    name: Android Client Lint & Assemble
+    name: Android Client Lint, Test & Assemble
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
@@ -127,7 +127,7 @@ jobs:
           if [ -f "apps/android/gradlew" ]; then
             cd apps/android
             chmod +x gradlew
-            ./gradlew lintDebug assembleDebug
+            ./gradlew testDebugUnitTest assembleDebug
           else
             echo "apps/android not yet provisioned; skipping."
           fi

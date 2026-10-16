@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import Hls from 'hls.js';
 import { useAnimeDetails } from '../hooks/useAnime';
 import { useLibrary } from '../hooks/useLibrary';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -20,7 +21,10 @@ import {
   Tv,
   List,
   Sparkles,
-  Info,
+  AlertTriangle,
+  RefreshCw,
+  Sliders,
+  Check,
 } from 'lucide-react';
 
 interface WatchProgress {
@@ -28,6 +32,8 @@ interface WatchProgress {
   duration: number;
   updatedAt: number;
 }
+
+type StreamMode = 'none' | 'mp4' | 'hls' | 'custom' | 'trailer';
 
 export const WatchPage: React.FC = () => {
   const { id, episode: epParam } = useParams<{ id: string; episode?: string }>();
@@ -40,8 +46,11 @@ export const WatchPage: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const playerContainerRef = useRef<HTMLDivElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   // Player state
+  const [streamMode, setStreamMode] = useState<StreamMode>('none');
+  const [customStreamUrl, setCustomStreamUrl] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
@@ -50,16 +59,30 @@ export const WatchPage: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState<boolean>(false);
+  const [showQualityMenu, setShowQualityMenu] = useState<boolean>(false);
+  const [availableQualities, setAvailableQualities] = useState<Array<{ id: number; name: string }>>([]);
+  const [currentQualityIndex, setCurrentQualityIndex] = useState<number>(-1); // -1 = auto
   const [showControls, setShowControls] = useState<boolean>(true);
-  const [useSampleStream, setUseSampleStream] = useState<boolean>(false);
-  const [useTrailerStream, setUseTrailerStream] = useState<boolean>(false);
   const [showEpisodeDrawer, setShowEpisodeDrawer] = useState<boolean>(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [isBuffering, setIsBuffering] = useState<boolean>(false);
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sample legal demonstration media for testing player engine
-  const sampleMediaUrl =
+  // Legal demonstration media for testing player engine
+  const sampleMp4Url =
     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  const sampleHlsUrl =
+    'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+
+  const activeMediaUrl =
+    streamMode === 'mp4'
+      ? sampleMp4Url
+      : streamMode === 'hls'
+      ? sampleHlsUrl
+      : streamMode === 'custom'
+      ? customStreamUrl
+      : '';
 
   const storageKey = `sahasra_progress_${animeId}_ep_${currentEpisode}`;
 
@@ -77,7 +100,7 @@ export const WatchPage: React.FC = () => {
     } catch {
       // Ignore storage read error
     }
-  }, [storageKey, useSampleStream]);
+  }, [storageKey, streamMode]);
 
   // Save progress periodically
   useEffect(() => {
@@ -102,6 +125,97 @@ export const WatchPage: React.FC = () => {
     }
   }, [currentTime, duration, animeId, currentEpisode, storageKey, getEntry, updateProgress]);
 
+  // Initialize and tear down HLS / MP4 playback
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeMediaUrl || streamMode === 'trailer' || streamMode === 'none') {
+      return;
+    }
+
+    setPlaybackError(null);
+    setIsBuffering(true);
+
+    const isHlsSource =
+      streamMode === 'hls' ||
+      activeMediaUrl.toLowerCase().includes('.m3u8');
+
+    if (isHlsSource) {
+      if (Hls.isSupported()) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90,
+        });
+        hlsRef.current = hls;
+
+        hls.loadSource(activeMediaUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+          setIsBuffering(false);
+          const qualities = data.levels.map((lvl, index) => ({
+            id: index,
+            name: lvl.height ? `${lvl.height}p` : `Bitrate ${Math.round(lvl.bitrate / 1000)}k`,
+          }));
+          setAvailableQualities(qualities);
+
+          // Resume progress if exists
+          try {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              const parsed: WatchProgress = JSON.parse(saved);
+              if (parsed.currentTime > 5) {
+                video.currentTime = parsed.currentTime;
+              }
+            }
+          } catch {
+            // Ignore
+          }
+
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        });
+
+        hls.on(Hls.Events.ERROR, (_, errorData) => {
+          if (errorData.fatal) {
+            switch (errorData.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                setPlaybackError(`HLS stream playback failed: ${errorData.details}`);
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native Safari HLS
+        video.src = activeMediaUrl;
+        video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      } else {
+        setPlaybackError('HLS streaming is not supported by your current browser.');
+      }
+    } else {
+      // Standard MP4 direct playback
+      video.src = activeMediaUrl;
+      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [activeMediaUrl, streamMode, storageKey]);
+
   // Activity timer to hide controls
   const handleMouseMove = () => {
     setShowControls(true);
@@ -121,8 +235,7 @@ export const WatchPage: React.FC = () => {
       videoRef.current.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
     }
   };
 
@@ -166,6 +279,14 @@ export const WatchPage: React.FC = () => {
     setShowSpeedMenu(false);
   };
 
+  const handleQualitySelect = (qualityIndex: number) => {
+    setCurrentQualityIndex(qualityIndex);
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = qualityIndex;
+    }
+    setShowQualityMenu(false);
+  };
+
   const toggleFullscreen = () => {
     if (!playerContainerRef.current) return;
     if (!document.fullscreenElement) {
@@ -174,6 +295,16 @@ export const WatchPage: React.FC = () => {
     } else {
       document.exitFullscreen().catch(() => {});
       setIsFullscreen(false);
+    }
+  };
+
+  const retryPlayback = () => {
+    setPlaybackError(null);
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().then(() => setIsPlaying(true)).catch((err) => {
+        setPlaybackError(`Playback failed: ${err.message}`);
+      });
     }
   };
 
@@ -244,7 +375,7 @@ export const WatchPage: React.FC = () => {
         ref={playerContainerRef}
         className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[#292C35] bg-black shadow-2xl group select-none"
       >
-        {useTrailerStream && anime.trailer?.site === 'youtube' && anime.trailer.id ? (
+        {streamMode === 'trailer' && anime.trailer?.site === 'youtube' && anime.trailer.id ? (
           <iframe
             src={`https://www.youtube.com/embed/${anime.trailer.id}?autoplay=1&enablejsapi=1`}
             title={displayTitle}
@@ -252,29 +383,77 @@ export const WatchPage: React.FC = () => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        ) : useSampleStream ? (
-          <video
-            ref={videoRef}
-            src={sampleMediaUrl}
-            className="h-full w-full object-contain cursor-pointer"
-            onClick={togglePlay}
-            onTimeUpdate={() => {
-              if (videoRef.current) {
-                setCurrentTime(videoRef.current.currentTime);
-              }
-            }}
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                setDuration(videoRef.current.duration);
-              }
-            }}
-            onEnded={() => {
-              setIsPlaying(false);
-              if (hasNextEpisode) {
-                navigate(`/watch/${anime.id}/${currentEpisode + 1}`);
-              }
-            }}
-          />
+        ) : streamMode === 'mp4' || streamMode === 'hls' || streamMode === 'custom' ? (
+          <>
+            <video
+              ref={videoRef}
+              className="h-full w-full object-contain cursor-pointer"
+              onClick={togglePlay}
+              onTimeUpdate={() => {
+                if (videoRef.current) {
+                  setCurrentTime(videoRef.current.currentTime);
+                }
+              }}
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  setDuration(videoRef.current.duration);
+                  setIsBuffering(false);
+                }
+              }}
+              onWaiting={() => setIsBuffering(true)}
+              onPlaying={() => setIsBuffering(false)}
+              onError={(e) => {
+                const target = e.currentTarget;
+                const errMessage = target.error
+                  ? `Media error code ${target.error.code}: ${target.error.message || 'Source could not be decoded'}`
+                  : 'Failed to load video stream.';
+                setPlaybackError(errMessage);
+              }}
+              onEnded={() => {
+                setIsPlaying(false);
+                if (hasNextEpisode) {
+                  navigate(`/watch/${anime.id}/${currentEpisode + 1}`);
+                }
+              }}
+            />
+
+            {/* In-Player Error Recovery Banner */}
+            {playbackError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/90 backdrop-blur-md z-30">
+                <div className="max-w-md space-y-4">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E64B55]/20 text-[#E64B55] border border-[#E64B55]/40">
+                    <AlertTriangle size={28} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-[#F5F5F7]">Stream Playback Interrupted</h3>
+                    <p className="text-xs text-[#A0A3AE]">{playbackError}</p>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-3 pt-2">
+                    <button
+                      onClick={retryPlayback}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-black text-xs font-bold transition-colors"
+                    >
+                      <RefreshCw size={14} />
+                      <span>Retry Playback</span>
+                    </button>
+                    <button
+                      onClick={() => setStreamMode('none')}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#191C22] hover:bg-[#292C35] border border-[#292C35] text-xs font-semibold text-[#F5F5F7] transition-colors"
+                    >
+                      <span>Switch Source</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Buffering Indicator */}
+            {isBuffering && !playbackError && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8585F7] border-t-transparent" />
+              </div>
+            )}
+          </>
         ) : (
           /* Notice for Metadata provider without direct raw video link */
           <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center bg-[#08090B]">
@@ -326,8 +505,7 @@ export const WatchPage: React.FC = () => {
                 {anime.trailer?.id && (
                   <button
                     onClick={() => {
-                      setUseTrailerStream(true);
-                      setUseSampleStream(false);
+                      setStreamMode('trailer');
                     }}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-black text-xs font-bold transition-colors"
                   >
@@ -337,14 +515,21 @@ export const WatchPage: React.FC = () => {
                 )}
                 <button
                   onClick={() => {
-                    setUseSampleStream(true);
-                    setUseTrailerStream(false);
-                    setIsPlaying(true);
+                    setStreamMode('hls');
                   }}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#191C22] hover:bg-[#292C35] border border-[#292C35] text-xs font-semibold text-[#F5F5F7] transition-colors"
                 >
                   <Tv size={14} />
-                  <span>Preview In-App Player Engine</span>
+                  <span>Test HLS Stream (M3U8)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setStreamMode('mp4');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#191C22] hover:bg-[#292C35] border border-[#292C35] text-xs font-semibold text-[#F5F5F7] transition-colors"
+                >
+                  <Play size={14} />
+                  <span>Test MP4 Stream</span>
                 </button>
               </div>
             </div>
@@ -352,7 +537,7 @@ export const WatchPage: React.FC = () => {
         )}
 
         {/* Custom Overlay Controls (Visible during video playback) */}
-        {useSampleStream && (
+        {(streamMode === 'mp4' || streamMode === 'hls' || streamMode === 'custom') && !playbackError && (
           <div
             className={`absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/85 via-transparent to-black/60 p-4 sm:p-6 transition-opacity duration-300 ${
               showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -361,12 +546,14 @@ export const WatchPage: React.FC = () => {
             {/* Top Bar */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[#8585F7]">Episode {currentEpisode}</p>
+                <p className="text-xs font-bold text-[#8585F7]">
+                  Episode {currentEpisode} • {streamMode.toUpperCase()} Engine
+                </p>
                 <p className="text-sm font-semibold text-white line-clamp-1">{displayTitle}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setUseSampleStream(false)}
+                  onClick={() => setStreamMode('none')}
                   className="px-3 py-1 rounded-lg bg-black/60 border border-[#292C35] text-[11px] font-semibold text-[#A0A3AE] hover:text-white"
                 >
                   Switch Source
@@ -453,16 +640,60 @@ export const WatchPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {/* Quality Selector (Available when HLS multi-bitrate streams are active) */}
+                  {availableQualities.length > 0 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setShowQualityMenu(!showQualityMenu);
+                          setShowSpeedMenu(false);
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/50 border border-white/20 text-xs font-semibold text-white hover:border-[#8585F7]"
+                      >
+                        <Sliders size={12} />
+                        <span>{currentQualityIndex === -1 ? 'Auto' : availableQualities[currentQualityIndex]?.name || 'HD'}</span>
+                      </button>
+                      {showQualityMenu && (
+                        <div className="absolute bottom-9 right-0 flex flex-col rounded-xl bg-[#191C22] border border-[#292C35] p-1.5 shadow-xl min-w-28 z-40">
+                          <button
+                            onClick={() => handleQualitySelect(-1)}
+                            className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors ${
+                              currentQualityIndex === -1 ? 'bg-[#8585F7] text-black' : 'text-[#F5F5F7] hover:bg-[#292C35]'
+                            }`}
+                          >
+                            <span>Auto</span>
+                            {currentQualityIndex === -1 && <Check size={12} />}
+                          </button>
+                          {availableQualities.map((q) => (
+                            <button
+                              key={q.id}
+                              onClick={() => handleQualitySelect(q.id)}
+                              className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-left transition-colors ${
+                                currentQualityIndex === q.id ? 'bg-[#8585F7] text-black' : 'text-[#F5F5F7] hover:bg-[#292C35]'
+                              }`}
+                            >
+                              <span>{q.name}</span>
+                              {currentQualityIndex === q.id && <Check size={12} />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Speed Selector */}
                   <div className="relative">
                     <button
-                      onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                      onClick={() => {
+                        setShowSpeedMenu(!showSpeedMenu);
+                        setShowQualityMenu(false);
+                      }}
                       className="px-2.5 py-1 rounded-lg bg-black/50 border border-white/20 text-xs font-semibold text-white hover:border-[#8585F7]"
                     >
                       {playbackSpeed}x
                     </button>
                     {showSpeedMenu && (
-                      <div className="absolute bottom-9 right-0 flex flex-col rounded-xl bg-[#191C22] border border-[#292C35] p-1.5 shadow-xl">
+                      <div className="absolute bottom-9 right-0 flex flex-col rounded-xl bg-[#191C22] border border-[#292C35] p-1.5 shadow-xl z-40">
                         {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
                           <button
                             key={s}

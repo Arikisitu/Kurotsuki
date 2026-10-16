@@ -1,13 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../ui/SearchBar';
 import { getCurrentSeason } from '../../hooks/useAnime';
-import { Bookmark, Bell } from 'lucide-react';
+import { Bookmark, Bell, Tv, BookOpen } from 'lucide-react';
 import { useLibrary } from '../../hooks/useLibrary';
 
 export const Header: React.FC = () => {
   const { season, year } = getCurrentSeason();
   const { listEntries } = useLibrary();
+  const location = useLocation();
+
+  const isMangaMode =
+    location.pathname.startsWith('/manga') ||
+    location.pathname.startsWith('/read') ||
+    (location.pathname === '/explore' && location.search.includes('type=manga'));
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-4 border-b border-[#292C35]/80 bg-[#08090B]/80 px-4 md:px-8 backdrop-blur-xl">
@@ -23,9 +29,36 @@ export const Header: React.FC = () => {
         </span>
       </Link>
 
-      {/* Center Search Bar */}
-      <div className="flex-1 max-w-xl mx-auto">
-        <SearchBar />
+      {/* Center Segmented Switcher (Anime | Manga) & Search Bar */}
+      <div className="flex items-center gap-3 md:gap-5 flex-1 max-w-2xl mx-auto">
+        <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#111318] border border-[#292C35] shrink-0 shadow-inner">
+          <Link
+            to="/"
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              !isMangaMode
+                ? 'bg-[#8585F7] text-black shadow'
+                : 'text-[#A0A3AE] hover:text-[#F5F5F7]'
+            }`}
+          >
+            <Tv size={13} />
+            <span>Anime</span>
+          </Link>
+          <Link
+            to="/manga"
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              isMangaMode
+                ? 'bg-[#8585F7] text-black shadow'
+                : 'text-[#A0A3AE] hover:text-[#F5F5F7]'
+            }`}
+          >
+            <BookOpen size={13} />
+            <span>Manga</span>
+          </Link>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <SearchBar />
+        </div>
       </div>
 
       {/* Right Controls */}
@@ -50,20 +83,11 @@ export const Header: React.FC = () => {
           )}
         </Link>
 
-        {/* Notifications Mock Button */}
-        <button
-          type="button"
-          className="hidden sm:flex h-9 w-9 items-center justify-center rounded-xl bg-[#111318] text-[#A0A3AE] hover:text-[#F5F5F7] hover:bg-[#191C22] border border-[#292C35] transition-colors"
-          title="Updates & Alerts"
-        >
-          <Bell size={16} />
-        </button>
-
-        {/* User Avatar */}
+        {/* User Settings */}
         <Link
           to="/settings"
           className="h-9 w-9 rounded-xl overflow-hidden border border-[#292C35] hover:border-[#8585F7] transition-colors bg-[#191C22] flex items-center justify-center"
-          title="Account Profile"
+          title="Account Settings"
         >
           <span className="text-xs font-bold text-[#8585F7]">S</span>
         </Link>
@@ -71,3 +95,5 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+
+export default Header;

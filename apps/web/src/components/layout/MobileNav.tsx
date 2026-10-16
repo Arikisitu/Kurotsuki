@@ -4,9 +4,9 @@ import { Home, Compass, BookOpen, Calendar, Bookmark } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const navItems = [
-    { name: 'Home', path: '/', icon: Home },
+    { name: 'Anime', path: '/', icon: Home },
+    { name: 'Manga', path: '/manga', icon: BookOpen },
     { name: 'Explore', path: '/explore', icon: Compass },
-    { name: 'Manga', path: '/explore?type=manga', icon: BookOpen },
     { name: 'Schedule', path: '/schedule', icon: Calendar },
     { name: 'Library', path: '/library', icon: Bookmark },
   ];

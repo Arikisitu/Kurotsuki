@@ -23,9 +23,11 @@
 **SAHASRA** is an ultra-fast, aesthetics-first platform for discovering, streaming metadata tracking, reading progress tracking, and cataloging anime and manga. Driven by a unified edge API powered by AniList GraphQL (with Jikan & Kitsu resilience fallbacks), SAHASRA pairs high-performance client rendering with modern fluid design tokens across Web, Android phones, and Android TV.
 
 ### ✨ Key Capabilities
+- **Dedicated Anime & Manga Discovery**: Top centered segmented switcher (**Anime | Manga**) offering separated discovery, trending feeds, seasonal schedules, and media carousels.
+- **YouTube-Style Video Player**: Resolution/quality dropdown ("Auto (1080p)", "1080p", "720p", "480p", "360p"), playback speed selector (0.5x–2.0x), time/buffered scrubber, 10-second skip controls, and stream recovery on Web (HLS.js/HTML5) and Android (Media3 ExoPlayer).
+- **Real Manga Reader via MangaDex**: Live chapter manifests and page image feeds fetched from `api.mangadex.org` with dynamic page counts, webtoon vertical continuous scroll, single-page flip mode, and honest fallback with certified publisher links (MangaPlus, Viz, BookWalker).
+- **Working Settings & Cache Management**: Working user preferences across restarts via `SharedPreferences` on Android and `localStorage` on Web, including theme toggles, default quality/speed, and real Coil disk/memory cache clearing.
 - **Zero-Barrier Public Discovery**: Out-of-the-box trending anime & manga, seasonal breakdowns, airing calendars, and faceted search without mandatory authentication.
-- **Inbuilt Streaming Player**: Customized AMOLED video player with HLS.js adaptive bitrate streaming (`.m3u8`), HTML5 MP4 playback, official YouTube trailers, 10s scrub skips, speed selection (0.5x–2.0x), and in-player error recovery.
-- **Inbuilt Manga Reader**: Dual-mode reader engine supporting continuous vertical webtoon scrolling and single-page flip mode with keyboard shortcuts (`ArrowLeft`/`ArrowRight`/`Space`), width toggling (Normal/Wide/Full), and chapter selectors.
 - **Anti-Piracy Compliance**: Strict creator-rights adherence. Displays official licensed outbound partners (Crunchyroll, Netflix, Hulu, MangaPlus, Viz, BookWalker) alongside embedded trailers and legal player engines.
 - **Local-First Persistence**: Instant offline library and progress tracking via browser `localStorage` on Web and SQLite Room Database (`SahasraDatabase`) on Android.
 - **Cross-Platform Design System**: Dark AMOLED surfaces (`#08090B`, `#111318`), electric iris accents (`#8585F7`, `#AAA7FF`), and crimson highlights (`#E64B55`) synchronized across Web and Jetpack Compose.

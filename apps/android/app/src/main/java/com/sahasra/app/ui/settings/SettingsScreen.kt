@@ -1,5 +1,7 @@
 package com.sahasra.app.ui.settings
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,8 +28,11 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,10 +48,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.Coil
 import com.sahasra.app.R
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
@@ -61,9 +68,25 @@ import com.sahasra.app.ui.theme.SahasraTextSecondary
 fun SettingsScreen(
     onBackClick: () -> Unit
 ) {
-    var isAmoledEnabled by remember { mutableStateOf(true) }
-    var selectedQuality by remember { mutableStateOf("1080p") }
-    var isAutoplayEnabled by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("sahasra_prefs", Context.MODE_PRIVATE) }
+
+    var isAmoledEnabled by remember {
+        mutableStateOf(prefs.getBoolean("amoled_theme", true))
+    }
+    var selectedQuality by remember {
+        mutableStateOf(prefs.getString("streaming_quality", "Auto (1080p)") ?: "Auto (1080p)")
+    }
+    var selectedSpeed by remember {
+        mutableStateOf(prefs.getString("playback_speed", "1.0x") ?: "1.0x")
+    }
+    var isAutoplayEnabled by remember {
+        mutableStateOf(prefs.getBoolean("autoplay_next", true))
+    }
+    var defaultReaderMode by remember {
+        mutableStateOf(prefs.getString("default_reader_mode", "Vertical Webtoon") ?: "Vertical Webtoon")
+    }
+    var cacheNotice by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -125,7 +148,7 @@ fun SettingsScreen(
                     )
                 )
                 Text(
-                    text = "Version 0.1.0 • Alpha",
+                    text = "Version 0.2.0 • Release",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = SahasraTextSecondary
                     )
@@ -140,7 +163,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "AniList API Connected",
+                        text = "AniList & MangaDex Connected",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = SahasraSuccess,
                             fontSize = 11.sp
@@ -150,58 +173,110 @@ fun SettingsScreen(
             }
         }
 
-        // Settings Category: Appearance
-        SettingsCategory(title = "Appearance") {
+        // Appearance
+        SettingsCategory(title = "Appearance & Interface") {
             SettingsToggleRow(
                 icon = Icons.Rounded.Palette,
                 title = "AMOLED Pitch Black Theme",
-                subtitle = "Optimized for OLED displays with deep blacks",
+                subtitle = "Optimized for OLED displays with true blacks",
                 checked = isAmoledEnabled,
-                onCheckedChange = { isAmoledEnabled = it }
+                onCheckedChange = {
+                    isAmoledEnabled = it
+                    prefs.edit().putBoolean("amoled_theme", it).apply()
+                }
             )
         }
 
-        // Settings Category: Playback
-        SettingsCategory(title = "Playback & Streaming") {
+        // Playback
+        SettingsCategory(title = "Video Player") {
             SettingsOptionRow(
                 icon = Icons.Rounded.HighQuality,
-                title = "Default Streaming Quality",
+                title = "Preferred Video Quality",
                 value = selectedQuality,
                 onClick = {
-                    selectedQuality = when (selectedQuality) {
+                    val next = when (selectedQuality) {
+                        "Auto (1080p)" -> "1080p"
                         "1080p" -> "720p"
                         "720p" -> "480p"
-                        "480p" -> "Auto"
-                        else -> "1080p"
+                        else -> "Auto (1080p)"
                     }
+                    selectedQuality = next
+                    prefs.edit().putString("streaming_quality", next).apply()
                 }
             )
+
+            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
+
+            SettingsOptionRow(
+                icon = Icons.Rounded.Speed,
+                title = "Default Playback Speed",
+                value = selectedSpeed,
+                onClick = {
+                    val next = when (selectedSpeed) {
+                        "1.0x" -> "1.25x"
+                        "1.25x" -> "1.5x"
+                        "1.5x" -> "2.0x"
+                        else -> "1.0x"
+                    }
+                    selectedSpeed = next
+                    prefs.edit().putString("playback_speed", next).apply()
+                }
+            )
+
+            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
 
             SettingsToggleRow(
                 icon = Icons.Rounded.Wifi,
                 title = "Auto-play Next Episode",
-                subtitle = "Automatically begin the next episode when current finishes",
+                subtitle = "Advance to the next episode automatically",
                 checked = isAutoplayEnabled,
-                onCheckedChange = { isAutoplayEnabled = it }
+                onCheckedChange = {
+                    isAutoplayEnabled = it
+                    prefs.edit().putBoolean("autoplay_next", it).apply()
+                }
             )
         }
 
-        // Settings Category: Data & Cache
-        SettingsCategory(title = "Storage & Data") {
+        // Manga Reader Settings
+        SettingsCategory(title = "Manga Reader") {
+            SettingsOptionRow(
+                icon = Icons.Rounded.MenuBook,
+                title = "Default Reading Mode",
+                value = defaultReaderMode,
+                onClick = {
+                    val next = if (defaultReaderMode == "Vertical Webtoon") "Horizontal Paged" else "Vertical Webtoon"
+                    defaultReaderMode = next
+                    prefs.edit().putString("default_reader_mode", next).apply()
+                }
+            )
+        }
+
+        // Data & Cache
+        SettingsCategory(title = "Storage & Cache") {
             SettingsActionRow(
                 icon = Icons.Rounded.DeleteOutline,
-                title = "Clear Image & Response Cache",
-                subtitle = "Frees up local temporary disk space",
-                onClick = { /* Clears coil / okhttp cache */ }
+                title = "Clear Image & HTTP Cache",
+                subtitle = cacheNotice ?: "Frees up temporary downloaded images and scan files",
+                onClick = {
+                    try {
+                        Coil.imageLoader(context).memoryCache?.clear()
+                        Coil.imageLoader(context).diskCache?.clear()
+                        context.cacheDir.deleteRecursively()
+                        cacheNotice = "Cache successfully cleared"
+                        Toast.makeText(context, "Storage cache cleared", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        cacheNotice = "Cleared memory cache"
+                    }
+                }
             )
         }
 
-        // Settings Category: About
-        SettingsCategory(title = "About") {
+        // About & Legal
+        SettingsCategory(title = "About & Licenses") {
             SettingsActionRow(
                 icon = Icons.Rounded.Info,
                 title = "About SAHASRA",
-                subtitle = "Open source Anime & Manga tracking platform powered by AniList",
+                subtitle = "Unified Anime, Manga & Discovery Platform. Open source compliance.",
                 onClick = { }
             )
         }
@@ -279,10 +354,10 @@ private fun SettingsToggleRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = SahasraBg,
-                checkedTrackColor = SahasraAccent,
+                checkedThumbColor = SahasraAccent,
+                checkedTrackColor = SahasraElevated,
                 uncheckedThumbColor = SahasraTextSecondary,
-                uncheckedTrackColor = SahasraElevated
+                uncheckedTrackColor = SahasraSurface
             )
         )
     }
@@ -321,14 +396,14 @@ private fun SettingsOptionRow(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(SahasraElevated)
+                .border(1.dp, SahasraBorder, RoundedCornerShape(8.dp))
                 .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = SahasraAccent,
-                    fontWeight = FontWeight.Bold
-                )
+                color = SahasraAccent,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }

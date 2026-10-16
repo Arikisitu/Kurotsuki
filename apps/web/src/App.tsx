@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { ExplorePage } from './pages/ExplorePage';
 import { SearchPage } from './pages/SearchPage';
 import { AnimeDetailPage } from './pages/AnimeDetailPage';
+import { MangaHomePage } from './pages/MangaHomePage';
 import { MangaDetailPage } from './pages/MangaDetailPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { SchedulePage } from './pages/SchedulePage';
@@ -32,6 +33,7 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
+            <Route path="manga" element={<MangaHomePage />} />
             <Route path="explore" element={<ExplorePage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="anime/:id" element={<AnimeDetailPage />} />

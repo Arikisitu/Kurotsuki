@@ -286,7 +286,7 @@ object AniListQueries {
     """.trimIndent()
 
     val AIRING_SCHEDULE = """
-        query AiringSchedule(${'$'}page: Int = 1, ${'$'}perPage: Int = 20, ${'$'}airingAtGreater: Int, ${'$'}airingAtLesser: Int) {
+        query AiringSchedule(${'$'}page: Int = 1, ${'$'}perPage: Int = 20) {
             Page(page: ${'$'}page, perPage: ${'$'}perPage) {
                 pageInfo {
                     total

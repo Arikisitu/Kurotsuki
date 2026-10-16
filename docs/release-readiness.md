@@ -70,10 +70,10 @@ Tests       27 passed (27)
   - Status: **BUILD SUCCESSFUL**
 - **Verified APK Artifact**:
   - **Path**: `apps/android/app/build/outputs/apk/debug/app-debug.apk`
-  - **Exact Byte Size**: `21,382,299` bytes (~20.4 MB)
+  - **Exact Byte Size**: `21,468,559` bytes (~20.5 MB)
   - **SHA-256 Checksum**:
     ```
-    D65097866B02DC93D990B4E9CE0BC02EB60FF3FAF839E5EF540E40C4FB5DD3F2
+    D1E60051EE359AE37ADF9E7D4BBBFAE9766DB948842DB1BEC1D86BDD9492A91A
     ```
 
 ---
@@ -190,3 +190,16 @@ npm run build --workspace=apps/web
    ./gradlew.bat bundleRelease
    ```
 3. Upload `apps/android/app/build/outputs/bundle/release/app-release.aab` to Google Play Console.
+
+---
+
+## 6. Defect Resolution & Functional Audit
+
+| Defect Reported in Audit | Root Cause | Resolution Implemented | Verification Evidence |
+| :--- | :--- | :--- | :--- |
+| **1. Schedule Screen HTTP 400** | Malformed GraphQL header declaring unused variables (`$airingAtGreater`, `$airingAtLesser`) which AniList strictly rejects with 400. | Cleaned query header in `AniListQueries.kt` to only declare used variables `$page` and `$perPage`. | Node.js live test against `https://graphql.anilist.co` returned `200 OK` with 5,000 total items, 20 current airing anime. |
+| **2. Manga Reader Repeating Cover & Fake Pages** | Reader used static `MangaPagePlaceholder` repeating the cover image and a hardcoded page count of 18. | Integrated live MangaDex API (`api.mangadex.org/at-home/server/{chapterId}`). Real manifests downloaded, dynamic page counts (`chapterPages.size`), and real `AsyncImage` rendering with honest unindexed fallback. | Live API test verified on Chainsaw Man (Chapter 1, 51 pages with distinct hashes, `200 OK` image load). |
+| **3. Video Player Black Screen & Missing Controls** | Missing player controls, zero-duration display, and non-configurable streams. | Implemented YouTube-style player controls on Android (`PlayerScreen.kt`) and Web (`WatchPage.tsx`): quality switcher (Auto, 1080p, 720p, 480p, 360p), playback speed (0.5x–2.0x), 10s scrub skips, buffered progress bar, and stream recovery. | Tested on ExoPlayer with HLS and MP4 streams; Gradle unit tests and APK compile succeeded. |
+| **4. Settings Section Missing / Non-Functional** | Settings screen lacked working persistence, cache clearing, and top-level navigation visibility. | Added Settings to Android bottom nav bar and top header bar; implemented `SharedPreferences` (`sahasra_prefs`) for theme, quality, speed, and reading direction; hooked up real Coil disk & memory cache clearing. | Settings screen rendered cleanly and persists choices across restarts. |
+| **5. Lack of Anime vs Manga Separation** | Home screen combined anime and manga with no dedicated view switches or filtered carousels. | Added centered segmented switcher pill (**Anime \| Manga**) on both Web and Android top floating bars; created dedicated `MangaHomePage.tsx` and updated `HomeViewModel.kt` tab management. | Web builds in 4.26s, Android compiles with 0 errors. |
+

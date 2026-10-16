@@ -50,17 +50,26 @@ fun SahasraNavHost(
         exitTransition = { fadeOut() }
     ) {
         composable(Screen.Home.route) {
-            val homeViewModel = remember { HomeViewModel(app.animeRepository) }
+            val homeViewModel = remember { HomeViewModel(app.animeRepository, app.mangaRepository) }
             HomeScreen(
                 viewModel = homeViewModel,
                 onAnimeClick = { anime ->
                     navController.navigate(Screen.AnimeDetail.createRoute(anime.id))
                 },
+                onMangaClick = { manga ->
+                    navController.navigate(Screen.MangaDetail.createRoute(manga.id))
+                },
                 onWatchClick = { anime ->
                     navController.navigate(Screen.Player.createRoute(anime.id, anime.title.userPreferredTitle()))
                 },
+                onReadClick = { manga ->
+                    navController.navigate(Screen.MangaReader.createRoute(manga.id, 1f))
+                },
                 onSearchClick = {
                     navController.navigate(Screen.Search.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
                 },
                 onSeeAllClick = {
                     navController.navigate(Screen.Explore.route)

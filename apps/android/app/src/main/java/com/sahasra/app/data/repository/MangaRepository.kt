@@ -253,4 +253,81 @@ class MangaRepository(
             color = color
         )
     }
+
+    suspend fun getChapterPages(mangaTitle: String, chapterNumber: Float): Result<List<String>> {
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+
+                val cleanTitle = mangaTitle.replace(Regex("[^a-zA-Z0-9 ]"), " ").trim()
+                val encodedTitle = java.net.URLEncoder.encode(cleanTitle, "UTF-8")
+
+                // 1. Search MangaDex for manga id
+                val searchReq = okhttp3.Request.Builder()
+                    .url("https://api.mangadex.org/manga?title=$encodedTitle&limit=5&order[relevance]=desc")
+                    .header("User-Agent", "SAHASRA-Android/1.0")
+                    .build()
+
+                val searchResp = client.newCall(searchReq).execute()
+                val searchJson = com.google.gson.JsonParser.parseString(searchResp.body?.string() ?: "{}").asJsonObject
+                val mangaList = searchJson.getAsJsonArray("data")
+                if (mangaList == null || mangaList.size() == 0) {
+                    return@withContext Result.failure(Exception("Manga not found on MangaDex"))
+                }
+
+                val mangaId = mangaList.get(0).asJsonObject.get("id").asString
+
+                // 2. Query available chapters
+                val feedReq = okhttp3.Request.Builder()
+                    .url("https://api.mangadex.org/manga/$mangaId/feed?translatedLanguage[]=en&order[chapter]=asc&limit=100")
+                    .header("User-Agent", "SAHASRA-Android/1.0")
+                    .build()
+
+                val feedResp = client.newCall(feedReq).execute()
+                val feedJson = com.google.gson.JsonParser.parseString(feedResp.body?.string() ?: "{}").asJsonObject
+                val chapterList = feedJson.getAsJsonArray("data")
+                if (chapterList == null || chapterList.size() == 0) {
+                    return@withContext Result.failure(Exception("No chapters available"))
+                }
+
+                val targetChInt = chapterNumber.toInt().toString()
+                var chapterId = chapterList.get(0).asJsonObject.get("id").asString
+                for (item in chapterList) {
+                    val obj = item.asJsonObject
+                    val attrs = obj.getAsJsonObject("attributes")
+                    val chStr = attrs?.get("chapter")?.asString
+                    if (chStr == targetChInt || chStr == chapterNumber.toString()) {
+                        chapterId = obj.get("id").asString
+                        break
+                    }
+                }
+
+                // 3. Query At-Home server for chapter page files
+                val atHomeReq = okhttp3.Request.Builder()
+                    .url("https://api.mangadex.org/at-home/server/$chapterId")
+                    .header("User-Agent", "SAHASRA-Android/1.0")
+                    .build()
+
+                val atHomeResp = client.newCall(atHomeReq).execute()
+                val atHomeJson = com.google.gson.JsonParser.parseString(atHomeResp.body?.string() ?: "{}").asJsonObject
+                val baseUrl = atHomeJson.get("baseUrl")?.asString ?: return@withContext Result.failure(Exception("Invalid server"))
+                val chapterObj = atHomeJson.getAsJsonObject("chapter") ?: return@withContext Result.failure(Exception("No chapter payload"))
+                val hash = chapterObj.get("hash")?.asString ?: return@withContext Result.failure(Exception("No hash"))
+                val dataArr = chapterObj.getAsJsonArray("data") ?: return@withContext Result.failure(Exception("No pages array"))
+
+                val pages = mutableListOf<String>()
+                for (pageFile in dataArr) {
+                    val filename = pageFile.asString
+                    pages.add("$baseUrl/data/$hash/$filename")
+                }
+
+                Result.success(pages)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 }

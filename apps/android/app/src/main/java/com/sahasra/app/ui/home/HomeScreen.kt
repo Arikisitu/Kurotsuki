@@ -2,6 +2,8 @@ package com.sahasra.app.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +15,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Book
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,22 +43,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sahasra.app.R
 import com.sahasra.app.domain.model.Anime
+import com.sahasra.app.domain.model.Manga
+import com.sahasra.app.ui.components.AnimeCard
+import com.sahasra.app.ui.components.MangaCard
 import com.sahasra.app.ui.components.ErrorState
 import com.sahasra.app.ui.components.HeroSection
 import com.sahasra.app.ui.components.HomeSkeleton
 import com.sahasra.app.ui.components.MediaCarousel
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
+import com.sahasra.app.ui.theme.SahasraBorder
 import com.sahasra.app.ui.theme.SahasraCrimson
+import com.sahasra.app.ui.theme.SahasraElevated
 import com.sahasra.app.ui.theme.SahasraSurface
 import com.sahasra.app.ui.theme.SahasraTextPrimary
+import com.sahasra.app.ui.theme.SahasraTextSecondary
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     onAnimeClick: (Anime) -> Unit,
+    onMangaClick: (Manga) -> Unit,
     onWatchClick: (Anime) -> Unit,
+    onReadClick: (Manga) -> Unit,
     onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onSeeAllClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -74,118 +91,279 @@ fun HomeScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Hero Section
-                    uiState.featured?.let { featured ->
-                        item(key = "hero_${featured.id}") {
-                            HeroSection(
-                                anime = featured,
-                                onWatchClick = onWatchClick,
-                                onDetailsClick = onAnimeClick,
-                                onBookmarkClick = { viewModel.toggleBookmark(it) }
-                            )
-                        }
+                    item {
+                        Spacer(modifier = Modifier.height(72.dp))
                     }
 
-                    // Trending Section
-                    if (uiState.trending.isNotEmpty()) {
-                        item(key = "section_trending") {
-                            MediaCarousel(
-                                title = "Trending Now",
-                                items = uiState.trending,
-                                onSeeAllClick = { onSeeAllClick("trending") },
-                                onAnimeClick = onAnimeClick
-                            )
+                    if (uiState.selectedTab == HomeTab.ANIME) {
+                        // ANIME MODE
+                        uiState.featuredAnime?.let { featured ->
+                            item(key = "hero_${featured.id}") {
+                                HeroSection(
+                                    anime = featured,
+                                    onWatchClick = onWatchClick,
+                                    onDetailsClick = onAnimeClick,
+                                    onBookmarkClick = { viewModel.toggleBookmark(it) }
+                                )
+                            }
                         }
-                    }
 
-                    // Popular This Season
-                    if (uiState.popularSeason.isNotEmpty()) {
-                        item(key = "section_popular") {
-                            MediaCarousel(
-                                title = "Popular This Season",
-                                items = uiState.popularSeason,
-                                onSeeAllClick = { onSeeAllClick("popular") },
-                                onAnimeClick = onAnimeClick
-                            )
+                        if (uiState.trending.isNotEmpty()) {
+                            item(key = "section_trending_anime") {
+                                MediaCarousel(
+                                    title = "Trending Anime",
+                                    items = uiState.trending,
+                                    onSeeAllClick = { onSeeAllClick("trending") },
+                                    onAnimeClick = onAnimeClick
+                                )
+                            }
                         }
-                    }
 
-                    // Top Rated
-                    if (uiState.topRated.isNotEmpty()) {
-                        item(key = "section_top_rated") {
-                            MediaCarousel(
-                                title = "Top Rated All-Time",
-                                items = uiState.topRated,
-                                onSeeAllClick = { onSeeAllClick("top_rated") },
-                                onAnimeClick = onAnimeClick
-                            )
+                        if (uiState.popularSeason.isNotEmpty()) {
+                            item(key = "section_seasonal_anime") {
+                                MediaCarousel(
+                                    title = "Popular This Season",
+                                    items = uiState.popularSeason,
+                                    onSeeAllClick = { onSeeAllClick("seasonal") },
+                                    onAnimeClick = onAnimeClick
+                                )
+                            }
                         }
-                    }
 
-                    // Upcoming Next Season
-                    if (uiState.upcoming.isNotEmpty()) {
-                        item(key = "section_upcoming") {
-                            MediaCarousel(
-                                title = "Anticipated Upcoming",
-                                items = uiState.upcoming,
-                                onSeeAllClick = { onSeeAllClick("upcoming") },
-                                onAnimeClick = onAnimeClick
-                            )
+                        if (uiState.topRated.isNotEmpty()) {
+                            item(key = "section_top_rated_anime") {
+                                MediaCarousel(
+                                    title = "All-Time Top Rated",
+                                    items = uiState.topRated,
+                                    onSeeAllClick = { onSeeAllClick("top_rated") },
+                                    onAnimeClick = onAnimeClick
+                                )
+                            }
+                        }
+                    } else {
+                        // MANGA MODE
+                        item(key = "manga_categories") {
+                            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                Text(
+                                    text = "Manga & Light Novels",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SahasraTextPrimary
+                                    )
+                                )
+                                Text(
+                                    text = "Discover trending manga, Korean webtoons, and serializations",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = SahasraTextSecondary)
+                                )
+                            }
+                        }
+
+                        if (uiState.trendingManga.isNotEmpty()) {
+                            item(key = "section_trending_manga") {
+                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Trending Manga",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = SahasraTextPrimary
+                                            )
+                                        )
+                                    }
+
+                                    LazyRow(
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(uiState.trendingManga) { mangaItem ->
+                                            MangaCard(
+                                                manga = mangaItem,
+                                                cardWidth = 135.dp,
+                                                onClick = { onMangaClick(mangaItem) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (uiState.popularManga.isNotEmpty()) {
+                            item(key = "section_popular_manga") {
+                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Popular Webtoons & Manhwa",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = SahasraTextPrimary
+                                            )
+                                        )
+                                    }
+
+                                    LazyRow(
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(uiState.popularManga) { mangaItem ->
+                                            MangaCard(
+                                                manga = mangaItem,
+                                                cardWidth = 135.dp,
+                                                onClick = { onMangaClick(mangaItem) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(80.dp))
+                        Spacer(modifier = Modifier.height(90.dp))
                     }
                 }
 
-                // Floating Brand Header Overlay
+                // Fixed Top Floating Bar: Logo + Centered (Anime | Manga) Switcher + Search & Settings
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Brand Logo
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xCC08090B))
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xDD08090B))
+                            .border(1.dp, SahasraBorder, RoundedCornerShape(16.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.sahasra_logo),
                             contentDescription = "SAHASRA Logo",
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(22.dp)
                                 .clip(CircleShape)
                         )
                         Text(
                             text = "SAHASRA",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = SahasraTextPrimary,
-                                letterSpacing = 2.sp
+                                letterSpacing = 1.sp
                             )
                         )
                     }
 
-                    IconButton(
-                        onClick = onSearchClick,
+                    // Centered Segmented Switcher: Anime | Manga
+                    Row(
                         modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xCC111318))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xDD111318))
+                            .border(1.dp, SahasraBorder, RoundedCornerShape(16.dp))
+                            .padding(3.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = "Search",
-                            tint = SahasraAccent,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        val isAnime = uiState.selectedTab == HomeTab.ANIME
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isAnime) SahasraAccent else Color.Transparent)
+                                .clickable { viewModel.setTab(HomeTab.ANIME) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Tv,
+                                    contentDescription = null,
+                                    tint = if (isAnime) SahasraBg else SahasraTextSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Anime",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isAnime) SahasraBg else SahasraTextSecondary,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (!isAnime) SahasraAccent else Color.Transparent)
+                                .clickable { viewModel.setTab(HomeTab.MANGA) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Book,
+                                    contentDescription = null,
+                                    tint = if (!isAnime) SahasraBg else SahasraTextSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Manga",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (!isAnime) SahasraBg else SahasraTextSecondary,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // Search & Settings Action Buttons
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        IconButton(
+                            onClick = onSearchClick,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xDD111318))
+                                .border(1.dp, SahasraBorder, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Search,
+                                contentDescription = "Search",
+                                tint = SahasraAccent,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onSettingsClick,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xDD111318))
+                                .border(1.dp, SahasraBorder, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                contentDescription = "Settings",
+                                tint = SahasraTextPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }

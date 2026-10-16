@@ -35,13 +35,14 @@ fun SahasraMainApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Show BottomNavBar only on root tab destinations
+    // Show BottomNavBar on root tab destinations
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
         Screen.Explore.route,
         Screen.Search.route,
         Screen.Schedule.route,
-        Screen.Library.route
+        Screen.Library.route,
+        Screen.Settings.route
     )
 
     Scaffold(

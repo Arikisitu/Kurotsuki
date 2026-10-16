@@ -174,3 +174,124 @@ fun AnimeCard(
         )
     }
 }
+
+@Composable
+fun MangaCard(
+    manga: com.sahasra.app.domain.model.Manga,
+    modifier: Modifier = Modifier,
+    cardWidth: Dp = 140.dp,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .width(cardWidth)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+    ) {
+        // Poster Box (2:3 aspect ratio)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2f / 3f)
+                .clip(RoundedCornerShape(12.dp))
+                .background(SahasraCardBg)
+                .border(1.dp, SahasraBorder, RoundedCornerShape(12.dp))
+        ) {
+            AsyncImage(
+                model = manga.coverImage.bestImageUrl(),
+                contentDescription = manga.title.userPreferredTitle(),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Format Badge (Top Right)
+            val formatText = manga.format.name.replace("_", " ")
+            if (formatText.isNotBlank()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xCC111318))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = formatText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SahasraAccent
+                        )
+                    )
+                }
+            }
+
+            // Score Badge (Top Left)
+            if (manga.averageScore != null && manga.averageScore > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xCC08090B))
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = SahasraScoreGold,
+                        modifier = Modifier.height(10.dp).width(10.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = manga.displayScoreOutOfTen(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SahasraTextPrimary
+                        )
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Title
+        Text(
+            text = manga.title.userPreferredTitle(),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = SahasraTextPrimary,
+                lineHeight = 18.sp
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        // Subtitle
+        val subtitle = buildString {
+            if (manga.chapters != null) {
+                append("${manga.chapters} chs")
+            } else {
+                append(manga.status.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() })
+            }
+            if (manga.genres.isNotEmpty()) {
+                append(" • ${manga.genres.first()}")
+            }
+        }
+
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = SahasraTextSecondary,
+                fontSize = 11.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}

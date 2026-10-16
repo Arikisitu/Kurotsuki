@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Anime } from '@sahasra/shared-types';
+import { Anime, Manga } from '@sahasra/shared-types';
 import { ScoreBadge } from './ScoreBadge';
-import { Play, Info, Bookmark, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Info, Bookmark, Check, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useLibrary } from '../../hooks/useLibrary';
 
 interface HeroSectionProps {
-  items: Anime[];
+  items: (Anime | Manga)[];
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
@@ -19,11 +19,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
   const featured = items.slice(0, 5);
   const current = featured[currentIndex] || featured[0];
 
+  const isManga = 'chapters' in current || current.type === 'MANGA';
   const libraryEntry = getEntry(current.id);
   const displayTitle =
     current.title.userPreferred || current.title.english || current.title.romaji || 'Untitled';
   const bannerUrl = current.artwork.banner || current.artwork.cover.extraLarge || current.artwork.cover.large;
-  const studio = current.studios?.[0]?.name;
+  const authorObj = (current as Manga).authors?.[0]?.name;
+  const authorString = typeof authorObj === 'string' ? authorObj : (authorObj?.userPreferred || authorObj?.full || null);
+  const subtitleInfo = isManga
+    ? authorString
+    : (current as Anime).studios?.[0]?.name;
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % featured.length);
@@ -76,15 +81,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
               {current.averageScore && (
                 <ScoreBadge score={current.averageScore} size="md" />
               )}
-              {current.seasonYear && (
+              {!isManga && (current as Anime).seasonYear && (
                 <span className="text-[#A0A3AE]">
-                  {current.season ? `${current.season} ` : ''}{current.seasonYear}
+                  {(current as Anime).season ? `${(current as Anime).season} ` : ''}{(current as Anime).seasonYear}
                 </span>
               )}
-              {studio && (
+              {subtitleInfo && (
                 <>
                   <span className="text-[#292C35]">•</span>
-                  <span className="text-[#A0A3AE]">{studio}</span>
+                  <span className="text-[#A0A3AE]">{subtitleInfo}</span>
                 </>
               )}
             </div>
@@ -115,13 +120,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                to={`/watch/${current.id}`}
-                className="flex items-center gap-2 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-white px-5 py-3 text-sm font-semibold shadow-lg shadow-[#8585F7]/25 transition-all duration-200 active:scale-95"
-              >
-                <Play size={16} className="fill-current" />
-                <span>Watch Now</span>
-              </Link>
+              {isManga ? (
+                <Link
+                  to={`/read/${current.id}/1`}
+                  className="flex items-center gap-2 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-black px-5 py-3 text-sm font-semibold shadow-lg shadow-[#8585F7]/25 transition-all duration-200 active:scale-95"
+                >
+                  <BookOpen size={16} />
+                  <span>Read Chapter 1</span>
+                </Link>
+              ) : (
+                <Link
+                  to={`/watch/${current.id}`}
+                  className="flex items-center gap-2 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-black px-5 py-3 text-sm font-semibold shadow-lg shadow-[#8585F7]/25 transition-all duration-200 active:scale-95"
+                >
+                  <Play size={16} className="fill-current" />
+                  <span>Watch Now</span>
+                </Link>
+              )}
 
               <button
                 onClick={handleLibraryToggle}
@@ -139,57 +154,58 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
                 ) : (
                   <>
                     <Bookmark size={16} />
-                    <span>Track to Watch</span>
+                    <span>Track Progress</span>
                   </>
                 )}
               </button>
 
               <Link
-                to={`/anime/${current.id}`}
+                to={isManga ? `/manga/${current.id}` : `/anime/${current.id}`}
                 className="hidden sm:flex items-center gap-1.5 rounded-xl bg-[#191C22]/80 hover:bg-[#292C35] border border-[#292C35] text-[#A0A3AE] hover:text-[#F5F5F7] px-3.5 py-3 text-sm font-medium transition-colors"
                 title="Full Overview"
               >
                 <Info size={16} />
+                <span>Details</span>
               </Link>
             </div>
           </div>
+        </div>
 
-          {/* Carousel Dot Indicators & Navigation Controls */}
-          <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              {featured.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    idx === currentIndex
-                      ? 'w-6 bg-[#8585F7]'
-                      : 'w-2 bg-[#292C35] hover:bg-[#A0A3AE]'
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-1">
+        {/* Carousel Slide Indicators & Arrows */}
+        <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 md:bottom-12 md:right-12 flex items-center gap-2 z-20">
+          <div className="hidden sm:flex items-center gap-1.5 mr-2">
+            {featured.map((_, idx) => (
               <button
-                onClick={prevSlide}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#191C22]/80 hover:bg-[#292C35] border border-[#292C35] text-[#A0A3AE] hover:text-white transition-colors"
-                aria-label="Previous featured title"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#191C22]/80 hover:bg-[#292C35] border border-[#292C35] text-[#A0A3AE] hover:text-white transition-colors"
-                aria-label="Next featured title"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  currentIndex === idx
+                    ? 'w-6 bg-[#8585F7]'
+                    : 'w-1.5 bg-[#292C35] hover:bg-[#A0A3AE]'
+                }`}
+                title={`Go to slide ${idx + 1}`}
+              />
+            ))}
           </div>
+
+          <button
+            onClick={prevSlide}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#111318]/80 hover:bg-[#8585F7] hover:text-black text-[#F5F5F7] border border-[#292C35] backdrop-blur-md transition-all active:scale-90"
+            title="Previous Featured"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#111318]/80 hover:bg-[#8585F7] hover:text-black text-[#F5F5F7] border border-[#292C35] backdrop-blur-md transition-all active:scale-90"
+            title="Next Featured"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default HeroSection;

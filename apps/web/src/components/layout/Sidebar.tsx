@@ -16,9 +16,9 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
   const navItems = [
-    { name: 'Home', path: '/', icon: Home },
-    { name: 'Explore Anime', path: '/explore', icon: Compass },
-    { name: 'Manga & Novels', path: '/explore?type=manga', icon: BookOpen },
+    { name: 'Anime Home', path: '/', icon: Home },
+    { name: 'Manga Home', path: '/manga', icon: BookOpen },
+    { name: 'Explore', path: '/explore', icon: Compass },
     { name: 'Schedule', path: '/schedule', icon: Calendar },
     { name: 'My Library', path: '/library', icon: Bookmark },
   ];

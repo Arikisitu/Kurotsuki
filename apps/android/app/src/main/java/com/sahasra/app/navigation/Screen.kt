@@ -52,5 +52,6 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Explore, "Explore", Icons.Rounded.Explore),
     BottomNavItem(Screen.Search, "Search", Icons.Rounded.Search),
     BottomNavItem(Screen.Schedule, "Schedule", Icons.Rounded.CalendarMonth),
-    BottomNavItem(Screen.Library, "Library", Icons.Rounded.VideoLibrary)
+    BottomNavItem(Screen.Library, "Library", Icons.Rounded.VideoLibrary),
+    BottomNavItem(Screen.Settings, "Settings", Icons.Rounded.Settings)
 )

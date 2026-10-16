@@ -35,6 +35,10 @@ sealed class Screen(val route: String) {
             return "player/$mediaId/$encodedTitle?streamUrl=$encodedUrl"
         }
     }
+
+    data object MangaReader : Screen("manga_reader/{mangaId}/{chapterNumber}") {
+        fun createRoute(mangaId: Int, chapterNumber: Float = 1f): String = "manga_reader/$mangaId/$chapterNumber"
+    }
 }
 
 data class BottomNavItem(

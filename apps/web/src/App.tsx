@@ -10,6 +10,8 @@ import { MangaDetailPage } from './pages/MangaDetailPage';
 import { LibraryPage } from './pages/LibraryPage';
 import { SchedulePage } from './pages/SchedulePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { WatchPage } from './pages/WatchPage';
+import { ReadPage } from './pages/ReadPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 // Configure TanStack Query Client
@@ -33,7 +35,11 @@ export const App: React.FC = () => {
             <Route path="explore" element={<ExplorePage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="anime/:id" element={<AnimeDetailPage />} />
+            <Route path="watch/:id" element={<WatchPage />} />
+            <Route path="watch/:id/:episode" element={<WatchPage />} />
             <Route path="manga/:id" element={<MangaDetailPage />} />
+            <Route path="read/:id" element={<ReadPage />} />
+            <Route path="read/:id/:chapter" element={<ReadPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="schedule" element={<SchedulePage />} />
             <Route path="settings" element={<SettingsPage />} />

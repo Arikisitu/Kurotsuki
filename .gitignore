@@ -42,11 +42,15 @@ Thumbs.db
 *.sw?
 
 # Android / Mobile
-android/.gradle/
-android/app/build/
-android/build/
-android/local.properties
-android/.idea/
+.gradle/
+**/build/
+**/.gradle/
+**/local.properties
+apps/android/.gradle/
+apps/android/app/build/
+apps/android/build/
+apps/android/local.properties
+apps/android/.idea/
 *.apk
 *.aab
 *.keystore

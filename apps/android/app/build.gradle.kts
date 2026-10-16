@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.sahasra.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.sahasra.app"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
 
@@ -47,7 +47,7 @@ android {
         jvmTarget = "17"
         freeCompilerArgs = listOf(
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.media3.common.util.UnstableApi"
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
         )
     }
 

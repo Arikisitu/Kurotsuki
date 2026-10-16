@@ -88,6 +88,15 @@ export const MangaDetailPage: React.FC = () => {
 
           {/* Action Row */}
           <div className="space-y-2.5">
+            {/* Primary Read Action Button */}
+            <Link
+              to={`/read/${manga.id}/1`}
+              className="flex w-full items-center justify-center gap-2 h-11 px-4 rounded-xl bg-[#AAA7FF] hover:bg-[#9693F5] text-black text-xs font-bold shadow-lg shadow-[#AAA7FF]/20 transition-all"
+            >
+              <BookOpen size={16} />
+              <span>Read in SAHASRA Reader</span>
+            </Link>
+
             <select
               value={libraryEntry?.status || ''}
               onChange={(e) => {

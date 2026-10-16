@@ -116,11 +116,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ items }) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                to={`/anime/${current.id}`}
+                to={`/watch/${current.id}`}
                 className="flex items-center gap-2 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-white px-5 py-3 text-sm font-semibold shadow-lg shadow-[#8585F7]/25 transition-all duration-200 active:scale-95"
               >
                 <Play size={16} className="fill-current" />
-                <span>Explore Title</span>
+                <span>Watch Now</span>
               </Link>
 
               <button

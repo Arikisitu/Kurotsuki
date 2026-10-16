@@ -94,6 +94,15 @@ export const AnimeDetailPage: React.FC = () => {
 
           {/* Action Row */}
           <div className="space-y-2.5">
+            {/* Primary Watch Action Button */}
+            <Link
+              to={`/watch/${anime.id}`}
+              className="flex w-full items-center justify-center gap-2 h-11 px-4 rounded-xl bg-[#8585F7] hover:bg-[#7272E5] text-white text-xs font-bold shadow-lg shadow-[#8585F7]/25 transition-all"
+            >
+              <Play size={16} className="fill-current" />
+              <span>Watch in SAHASRA Player</span>
+            </Link>
+
             {/* Library Status Dropdown */}
             <div className="relative">
               <select

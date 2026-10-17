@@ -94,8 +94,8 @@ fun MangaDetailScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
-    var selectedSource by remember { mutableStateOf("MangaDex HQ") }
-    val availableSources = listOf("MangaDex HQ", "Kotatsu Mirror", "Webtoons")
+    var selectedSource by remember { mutableStateOf("Kotatsu Multi-Catalogue") }
+    val availableSources = listOf("Kotatsu Multi-Catalogue", "MangaSee HQ", "Asura Scans", "Webtoons HQ")
     var chapterSearchQuery by remember { mutableStateOf("") }
     var isSortAscending by remember { mutableStateOf(true) }
 

@@ -89,22 +89,31 @@ data class FutonCatalogue(
 
 val DefaultFutonCatalogues = listOf(
     FutonCatalogue(
-        id = "mangadex",
-        name = "MangaDex (Official Scans)",
-        version = "v1.4.2",
-        language = "EN / Multi",
-        isOnline = true,
-        latencyMs = 92,
-        supportedTypes = "Manga, Manhwa, Webtoons"
-    ),
-    FutonCatalogue(
         id = "kotatsu",
         name = "Kotatsu Multi-Catalogue Mirror",
         version = "v2.1.0",
+        language = "EN / Multi",
+        isOnline = true,
+        latencyMs = 74,
+        supportedTypes = "Manga, Manhwa, Webtoons (1200+ Sources)"
+    ),
+    FutonCatalogue(
+        id = "mangasee",
+        name = "MangaSee Scans Mirror",
+        version = "v1.2.0",
         language = "EN",
         isOnline = true,
-        latencyMs = 115,
-        supportedTypes = "Multi-Source Mirror"
+        latencyMs = 86,
+        supportedTypes = "High Quality Manga Releases"
+    ),
+    FutonCatalogue(
+        id = "asura",
+        name = "Asura Scans HQ",
+        version = "v1.4.0",
+        language = "EN",
+        isOnline = true,
+        latencyMs = 95,
+        supportedTypes = "Action, Fantasy, Manhwa"
     ),
     FutonCatalogue(
         id = "webtoons",
@@ -116,13 +125,13 @@ val DefaultFutonCatalogues = listOf(
         supportedTypes = "Korean Webtoons, Long Strip"
     ),
     FutonCatalogue(
-        id = "mangasee",
-        name = "MangaSee Scans Mirror",
-        version = "v1.2.0",
+        id = "flame",
+        name = "Flame Comics",
+        version = "v1.3.2",
         language = "EN",
         isOnline = true,
-        latencyMs = 128,
-        supportedTypes = "Manga Releases"
+        latencyMs = 112,
+        supportedTypes = "Manhua, Cultivation, Webtoons"
     ),
     FutonCatalogue(
         id = "bato",
@@ -130,8 +139,8 @@ val DefaultFutonCatalogues = listOf(
         version = "v1.3.1",
         language = "Multi",
         isOnline = true,
-        latencyMs = 142,
-        supportedTypes = "Scanlations, Manhwa"
+        latencyMs = 120,
+        supportedTypes = "Scanlations, Romance, Shoujo"
     )
 )
 
@@ -901,7 +910,7 @@ fun FutonMediaCard(
 
         // Subtitle (Warm Clay)
         Text(
-            text = "${manga.chapters ?: "?"} chapters • MangaDex",
+            text = "${manga.chapters ?: "?"} chapters • Futon Engine",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = FutonWarmClay,
                 fontSize = 11.sp

@@ -220,7 +220,7 @@ fun MangaReaderScreen(
                             CircularProgressIndicator(color = SahasraAccent, modifier = Modifier.size(44.dp))
                             Spacer(modifier = Modifier.height(14.dp))
                             Text(
-                                text = "Fetching genuine chapter pages from MangaDex...",
+                                text = "Loading chapter pages via Futon Engine...",
                                 color = SahasraTextSecondary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
@@ -495,7 +495,7 @@ fun MangaReaderScreen(
                                         )
                                     )
                                     Text(
-                                        text = " • MangaDex HQ",
+                                        text = " • Futon Engine",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = SahasraTextSecondary,
                                             fontSize = 11.sp

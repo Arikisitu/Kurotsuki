@@ -86,7 +86,7 @@ fun SettingsScreen(
     var selectedLanguage by remember { mutableStateOf("English (US)") }
     var selectedQuality by remember { mutableStateOf("Auto (1080p)") }
     var selectedReaderMode by remember { mutableStateOf("Vertical Webtoon") }
-    var selectedMangaSource by remember { mutableStateOf("MangaDex HQ") }
+    var selectedMangaSource by remember { mutableStateOf("Kotatsu Multi-Catalogue") }
     var cropBorders by remember { mutableStateOf("Enabled") }
     var highQualityImages by remember { mutableStateOf("32-bit (Full)") }
     var cacheNotice by remember { mutableStateOf<String?>(null) }
@@ -275,9 +275,10 @@ fun SettingsScreen(
                 highlightValue = true,
                 onClick = {
                     val next = when (selectedMangaSource) {
-                        "MangaDex HQ" -> "Kotatsu Mirror"
-                        "Kotatsu Mirror" -> "Webtoons HQ"
-                        else -> "MangaDex HQ"
+                        "Kotatsu Multi-Catalogue" -> "MangaSee HQ"
+                        "MangaSee HQ" -> "Asura Scans"
+                        "Asura Scans" -> "Webtoons HQ"
+                        else -> "Kotatsu Multi-Catalogue"
                     }
                     selectedMangaSource = next
                 }

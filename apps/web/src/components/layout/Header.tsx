@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
           className="h-8 w-8 rounded-lg object-cover border border-[#8585F7]/30"
         />
         <span className="font-extrabold text-sm tracking-wider text-[#F5F5F7] font-display">
-          SAHASRA
+          KUROTSUKI
         </span>
       </Link>
 

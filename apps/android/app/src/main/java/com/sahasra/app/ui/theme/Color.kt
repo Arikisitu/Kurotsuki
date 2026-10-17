@@ -35,3 +35,18 @@ val FutonWarmIvory = Color(0xFFF1DFD5)
 val FutonWarmClay = Color(0xFFA48C7F)
 val FutonEspresso = Color(0xFF673C1F)
 val FutonEspressoDark = Color(0xFF321300)
+
+// Anikku Design Tokens (Signature Palette from anikku-app.github.io & komikku-app/anikku)
+val AnikkuCanvasDark = Color(0xFF0A0D14)
+val AnikkuSurface = Color(0xFF101522)
+val AnikkuSurfaceElevated = Color(0xFF171E30)
+val AnikkuBorder = Color(0xFF1F273B)
+val AnikkuAccent = Color(0xFF818CF8) // Anikku Signature Periwinkle/Iris
+val AnikkuAccentSecondary = Color(0xFFA5B4FC)
+val AnikkuBloodMoon = Color(0xFFF43F5E) // Kurotsuki Blood Moon Rose/Red
+val AnikkuTextPrimary = Color(0xFFF8FAFC)
+val AnikkuTextSecondary = Color(0xFF94A3B8)
+val AnikkuTextMuted = Color(0xFF64748B)
+val AnikkuEmerald = Color(0xFF10B981)
+val AnikkuAmber = Color(0xFFF59E0B)
+

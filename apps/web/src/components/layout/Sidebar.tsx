@@ -39,10 +39,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-base tracking-wider text-[#F5F5F7] group-hover:text-[#8585F7] transition-colors font-display">
-              SAHASRA
+              KUROTSUKI
             </span>
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#8585F7] -mt-1">
-              Anime & Manga
+              黒月 • Anime & Manga
             </span>
           </div>
         </Link>

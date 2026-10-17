@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SAHASRA</string>
-    <string name="tagline">Premium Anime &amp; Manga Discovery</string>
+    <string name="app_name">Kurotsuki</string>
+    <string name="tagline">Anime &amp; Manga Sanctuary</string>
     
     <!-- Navigation Tabs -->
     <string name="nav_home">Home</string>

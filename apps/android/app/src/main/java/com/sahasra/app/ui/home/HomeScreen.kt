@@ -55,7 +55,11 @@ import com.sahasra.app.ui.components.HeroSection
 import com.sahasra.app.ui.components.MangaHeroSection
 import com.sahasra.app.ui.components.HomeSkeleton
 import com.sahasra.app.ui.components.MediaCarousel
+import com.sahasra.app.ui.anime.AnikkuAnimeSection
 import com.sahasra.app.ui.manga.FutonMangaSection
+import com.sahasra.app.ui.theme.AnikkuAccent
+import com.sahasra.app.ui.theme.AnikkuCanvasDark
+import com.sahasra.app.ui.theme.AnikkuTextPrimary
 import com.sahasra.app.ui.theme.FutonMangaGold
 import com.sahasra.app.ui.theme.FutonVelvetBlack
 import com.sahasra.app.ui.theme.SahasraAccent
@@ -108,65 +112,20 @@ fun HomeScreen(
                         onSearchClick = onSearchClick
                     )
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        item {
-                            Spacer(modifier = Modifier.height(72.dp))
-                        }
-
-                        // ANIME MODE
-                        uiState.featuredAnime?.let { featured ->
-                            item(key = "hero_${featured.id}") {
-                                HeroSection(
-                                    anime = featured,
-                                    onWatchClick = onWatchClick,
-                                    onDetailsClick = onAnimeClick,
-                                    onBookmarkClick = { viewModel.toggleBookmark(it) }
-                                )
-                            }
-                        }
-
-                        if (uiState.trending.isNotEmpty()) {
-                            item(key = "section_trending_anime") {
-                                MediaCarousel(
-                                    title = "Trending Anime",
-                                    items = uiState.trending,
-                                    onSeeAllClick = { onSeeAllClick("trending") },
-                                    onAnimeClick = onAnimeClick
-                                )
-                            }
-                        }
-
-                        if (uiState.popularSeason.isNotEmpty()) {
-                            item(key = "section_seasonal_anime") {
-                                MediaCarousel(
-                                    title = "Popular This Season",
-                                    items = uiState.popularSeason,
-                                    onSeeAllClick = { onSeeAllClick("seasonal") },
-                                    onAnimeClick = onAnimeClick
-                                )
-                            }
-                        }
-
-                        if (uiState.topRated.isNotEmpty()) {
-                            item(key = "section_top_rated_anime") {
-                                MediaCarousel(
-                                    title = "All-Time Top Rated",
-                                    items = uiState.topRated,
-                                    onSeeAllClick = { onSeeAllClick("top_rated") },
-                                    onAnimeClick = onAnimeClick
-                                )
-                            }
-                        }
-
-                        item {
-                            Spacer(modifier = Modifier.height(90.dp))
-                        }
-                    }
+                    AnikkuAnimeSection(
+                        featuredAnime = uiState.featuredAnime,
+                        trendingAnime = uiState.trending,
+                        seasonalAnime = uiState.popularSeason,
+                        topRatedAnime = uiState.topRated,
+                        onAnimeClick = onAnimeClick,
+                        onWatchClick = onWatchClick,
+                        onBookmarkClick = { viewModel.toggleBookmark(it) },
+                        onSearchClick = onSearchClick,
+                        onSettingsClick = onSettingsClick
+                    )
                 }
 
-                // Fixed Top Floating Bar: Logo + Centered (Anime | Manga) Switcher + Search & Settings
+                // Fixed Top Floating Bar: Kurotsuki Logo + Centered (Anime | Manga) Switcher + Search & Settings
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,34 +134,37 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Brand Logo
+                    // Kurotsuki Brand Logo
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xDD08090B))
+                            .background(Color(0xEE0A0D14))
                             .border(1.dp, SahasraBorder, RoundedCornerShape(16.dp))
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.sahasra_logo),
-                            contentDescription = "SAHASRA Logo",
+                            painter = painterResource(id = R.drawable.kurotsuki_logo),
+                            contentDescription = "Kurotsuki Katana Logo",
                             modifier = Modifier
                                 .size(22.dp)
                                 .clip(CircleShape)
                         )
-                        Text(
-                            text = "SAHASRA",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = SahasraTextPrimary,
-                                letterSpacing = 1.sp
+                        Column {
+                            Text(
+                                text = "KUROTSUKI",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = AnikkuTextPrimary,
+                                    letterSpacing = 1.sp,
+                                    fontSize = 12.sp
+                                )
                             )
-                        )
+                        }
                     }
 
-                    // Centered Segmented Switcher: Anime | Manga
+                    // Centered Segmented Switcher: Anime (Anikku) | Manga (Futon)
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -216,7 +178,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isAnime) SahasraAccent else Color.Transparent)
+                                .background(if (isAnime) AnikkuAccent else Color.Transparent)
                                 .clickable { viewModel.setTab(HomeTab.ANIME) }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
@@ -224,14 +186,14 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = Icons.Rounded.Tv,
                                     contentDescription = null,
-                                    tint = if (isAnime) SahasraBg else SahasraTextSecondary,
+                                    tint = if (isAnime) AnikkuCanvasDark else SahasraTextSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Anime",
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isAnime) SahasraBg else SahasraTextSecondary,
+                                    color = if (isAnime) AnikkuCanvasDark else SahasraTextSecondary,
                                     fontSize = 12.sp
                                 )
                             }

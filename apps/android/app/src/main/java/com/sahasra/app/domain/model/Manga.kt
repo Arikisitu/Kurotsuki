@@ -99,4 +99,23 @@ data class Manga(
         val names = authors.map { it.name }.filter { it.isNotBlank() }
         return if (names.isNotEmpty()) names.joinToString(", ") else "Author TBA"
     }
+
+    fun isManhwa(): Boolean {
+        return countryOfOrigin.equals("KR", ignoreCase = true) ||
+                genres.any { it.equals("Manhwa", ignoreCase = true) || it.equals("Webtoon", ignoreCase = true) }
+    }
+
+    fun isManhua(): Boolean {
+        return countryOfOrigin.equals("CN", ignoreCase = true) ||
+                genres.any { it.equals("Manhua", ignoreCase = true) }
+    }
+
+    fun formatBadgeText(): String {
+        return when {
+            isManhwa() -> "MANHWA"
+            isManhua() -> "MANHUA"
+            format == MangaFormat.NOVEL -> "LIGHT NOVEL"
+            else -> "MANGA"
+        }
+    }
 }

@@ -36,6 +36,7 @@ import com.sahasra.app.domain.model.Manga
 import com.sahasra.app.domain.model.MediaType
 import com.sahasra.app.ui.components.AnimeCard
 import com.sahasra.app.ui.components.AnimeCardSkeleton
+import com.sahasra.app.ui.components.MangaCard
 import com.sahasra.app.ui.components.ErrorState
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
@@ -201,16 +202,8 @@ fun ExploreScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(uiState.mangaList, key = { it.id }) { manga ->
-                        // Re-use card presentation for manga
-                        AnimeCard(
-                            anime = Anime(
-                                id = manga.id,
-                                title = manga.title,
-                                format = com.sahasra.app.domain.model.AnimeFormat.UNKNOWN,
-                                coverImage = manga.coverImage,
-                                averageScore = manga.averageScore,
-                                genres = manga.genres
-                            ),
+                        MangaCard(
+                            manga = manga,
                             cardWidth = 110.dp,
                             onClick = { onMangaClick(manga) }
                         )

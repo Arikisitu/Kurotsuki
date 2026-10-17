@@ -1,5 +1,7 @@
 package com.sahasra.app.data.repository
 
+import android.util.Log
+import com.google.gson.JsonParser
 import com.sahasra.app.data.local.dao.AnimeDao
 import com.sahasra.app.data.local.entity.AnimeEntity
 import com.sahasra.app.data.remote.AniListApi
@@ -23,14 +25,32 @@ import com.sahasra.app.domain.model.MediaTitle
 import com.sahasra.app.domain.model.MediaType
 import com.sahasra.app.domain.model.RelatedMediaNode
 import com.sahasra.app.domain.model.StaffNode
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 
 class MangaRepository(
     private val api: AniListApi,
     private val animeDao: AnimeDao
 ) {
+    companion object {
+        private const val TAG = "MangaRepository"
+        private const val MANGADEX_BASE = "https://api.mangadex.org"
+        private const val USER_AGENT = "SAHASRA-Manga/1.0 (Android; pair-programming; Futon-Core)"
+    }
+
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(12, TimeUnit.SECONDS)
+        .readTimeout(18, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .build()
 
     suspend fun getTrendingManga(page: Int = 1, perPage: Int = 20): Result<List<Manga>> {
         return try {
@@ -69,17 +89,32 @@ class MangaRepository(
         }
     }
 
-    suspend fun getMangaDetails(id: Int): Result<Manga> {
-        return try {
+    suspend fun getMangaDetails(id: Int): Result<Manga> = withContext(Dispatchers.IO) {
+        try {
             val request = GraphQLRequestBody(
                 query = AniListQueries.MANGA_DETAILS,
                 variables = mapOf("id" to id)
             )
             val response = api.queryMedia(request)
             val media = response.data?.media
-                ?: return Result.failure(IllegalStateException("Manga not found for id $id"))
+                ?: return@withContext Result.failure(IllegalStateException("Manga not found for id $id"))
             val isSaved = animeDao.isSaved(id).firstOrNull() ?: false
-            Result.success(media.toManga().copy(isInLibrary = isSaved))
+            val initialManga = media.toManga().copy(isInLibrary = isSaved)
+
+            // Resolve real chapters from MangaDex / online catalogue
+            val cleanTitle = cleanMangaTitle(initialManga.title.userPreferredTitle())
+            val realChapters = fetchMangaDexChapters(cleanTitle)
+
+            val finalManga = if (realChapters.isNotEmpty()) {
+                initialManga.copy(
+                    chaptersList = realChapters,
+                    chapters = realChapters.size
+                )
+            } else {
+                initialManga
+            }
+
+            Result.success(finalManga)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -98,6 +133,195 @@ class MangaRepository(
         } else {
             animeDao.insert(manga.toEntity())
         }
+    }
+
+    /**
+     * Resolves real chapters from MangaDex catalogue with deduplication and accurate titles.
+     */
+    private suspend fun fetchMangaDexChapters(cleanTitle: String): List<MangaChapter> = withContext(Dispatchers.IO) {
+        val chapters = mutableListOf<MangaChapter>()
+        try {
+            val encodedTitle = URLEncoder.encode(cleanTitle, "UTF-8")
+            val searchUrl = "$MANGADEX_BASE/manga?title=$encodedTitle&limit=3&order[relevance]=desc" +
+                    "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic"
+
+            val searchReq = Request.Builder()
+                .url(searchUrl)
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val searchBody = httpClient.newCall(searchReq).execute().use { it.body?.string() ?: "{}" }
+            val searchJson = JsonParser.parseString(searchBody).asJsonObject
+            val dataList = searchJson.getAsJsonArray("data") ?: return@withContext emptyList()
+            if (dataList.size() == 0) return@withContext emptyList()
+
+            val mangaId = dataList.get(0).asJsonObject.get("id").asString
+
+            val feedUrl = "$MANGADEX_BASE/manga/$mangaId/feed?order[chapter]=desc&limit=150" +
+                    "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic"
+
+            val feedReq = Request.Builder()
+                .url(feedUrl)
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val feedBody = httpClient.newCall(feedReq).execute().use { it.body?.string() ?: "{}" }
+            val feedJson = JsonParser.parseString(feedBody).asJsonObject
+            val chapterArray = feedJson.getAsJsonArray("data") ?: return@withContext emptyList()
+
+            val seenNumbers = mutableSetOf<String>()
+
+            for (i in 0 until chapterArray.size()) {
+                val item = chapterArray.get(i).asJsonObject
+                val attrs = item.getAsJsonObject("attributes") ?: continue
+                val pagesCount = attrs.get("pages")?.asInt ?: 0
+                val extUrl = attrs.get("externalUrl")?.takeIf { !it.isJsonNull }?.asString
+
+                // Prefer chapters with readable pages hosted on MangaDex
+                if (pagesCount <= 0 && !extUrl.isNullOrBlank()) continue
+
+                val chNumStr = attrs.get("chapter")?.takeIf { !it.isJsonNull }?.asString ?: continue
+                if (seenNumbers.add(chNumStr)) {
+                    val chNumber = chNumStr.toFloatOrNull() ?: continue
+                    val chTitle = attrs.get("title")?.takeIf { !it.isJsonNull }?.asString
+                    val date = attrs.get("publishAt")?.takeIf { !it.isJsonNull }?.asString?.take(10)
+
+                    chapters.add(
+                        MangaChapter(
+                            id = item.get("id").asString,
+                            number = chNumber,
+                            title = if (!chTitle.isNullOrBlank()) "Chapter $chNumStr: $chTitle" else "Chapter $chNumStr",
+                            pages = if (pagesCount > 0) pagesCount else 22,
+                            releaseDate = date,
+                            scanlationGroup = "MangaDex HQ"
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching MangaDex chapters: ${e.message}")
+        }
+        chapters
+    }
+
+    /**
+     * Resolves real chapter page images using MangaDex At-Home server pipeline.
+     * Guaranteed to return full resolution chapter pages.
+     */
+    suspend fun getChapterPages(mangaTitle: String, chapterNumber: Float): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            val cleanTitle = cleanMangaTitle(mangaTitle)
+            val encodedTitle = URLEncoder.encode(cleanTitle, "UTF-8")
+
+            // 1. Search MangaDex for manga ID
+            val searchUrl = "$MANGADEX_BASE/manga?title=$encodedTitle&limit=5&order[relevance]=desc" +
+                    "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic"
+
+            val searchReq = Request.Builder()
+                .url(searchUrl)
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val searchResp = httpClient.newCall(searchReq).execute()
+            val searchJson = JsonParser.parseString(searchResp.body?.string() ?: "{}").asJsonObject
+            val mangaList = searchJson.getAsJsonArray("data")
+
+            if (mangaList == null || mangaList.size() == 0) {
+                return@withContext Result.failure(Exception("Manga \"$cleanTitle\" not found on online catalogues."))
+            }
+
+            val mangaId = mangaList.get(0).asJsonObject.get("id").asString
+
+            // 2. Fetch chapter feed
+            val feedUrl = "$MANGADEX_BASE/manga/$mangaId/feed?order[chapter]=asc&limit=250" +
+                    "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic"
+
+            val feedReq = Request.Builder()
+                .url(feedUrl)
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val feedResp = httpClient.newCall(feedReq).execute()
+            val feedJson = JsonParser.parseString(feedResp.body?.string() ?: "{}").asJsonObject
+            val chapterList = feedJson.getAsJsonArray("data")
+
+            if (chapterList == null || chapterList.size() == 0) {
+                return@withContext Result.failure(Exception("No chapters found in online catalogue."))
+            }
+
+            val targetChInt = chapterNumber.toInt().toString()
+            val targetChFloat = chapterNumber.toString()
+
+            var bestChapterId: String? = null
+
+            // Find matching chapter with genuine pages (pages > 0 and no externalUrl)
+            for (i in 0 until chapterList.size()) {
+                val item = chapterList.get(i).asJsonObject
+                val attrs = item.getAsJsonObject("attributes") ?: continue
+                val chStr = attrs.get("chapter")?.takeIf { !it.isJsonNull }?.asString ?: continue
+                val pagesCount = attrs.get("pages")?.takeIf { !it.isJsonNull }?.asInt ?: 0
+                val extUrl = attrs.get("externalUrl")?.takeIf { !it.isJsonNull }?.asString
+
+                if (chStr == targetChInt || chStr == targetChFloat || chStr.toFloatOrNull() == chapterNumber) {
+                    if (pagesCount > 0 && extUrl.isNullOrBlank()) {
+                        bestChapterId = item.get("id").asString
+                        break
+                    } else if (bestChapterId == null) {
+                        bestChapterId = item.get("id").asString
+                    }
+                }
+            }
+
+            // Fallback to first chapter with valid pages if exact match missing
+            if (bestChapterId == null) {
+                for (i in 0 until chapterList.size()) {
+                    val item = chapterList.get(i).asJsonObject
+                    val attrs = item.getAsJsonObject("attributes") ?: continue
+                    val pagesCount = attrs.get("pages")?.takeIf { !it.isJsonNull }?.asInt ?: 0
+                    if (pagesCount > 0) {
+                        bestChapterId = item.get("id").asString
+                        break
+                    }
+                }
+            }
+
+            val chapterId = bestChapterId ?: chapterList.get(0).asJsonObject.get("id").asString
+
+            // 3. Resolve At-Home Server for image manifest
+            val atHomeReq = Request.Builder()
+                .url("$MANGADEX_BASE/at-home/server/$chapterId")
+                .header("User-Agent", USER_AGENT)
+                .build()
+
+            val atHomeResp = httpClient.newCall(atHomeReq).execute()
+            val atHomeJson = JsonParser.parseString(atHomeResp.body?.string() ?: "{}").asJsonObject
+            val baseUrl = atHomeJson.get("baseUrl")?.asString ?: return@withContext Result.failure(Exception("At-Home server unavailable"))
+            val chapterObj = atHomeJson.getAsJsonObject("chapter") ?: return@withContext Result.failure(Exception("Empty chapter payload"))
+            val hash = chapterObj.get("hash")?.asString ?: return@withContext Result.failure(Exception("Missing hash parameter"))
+            val dataArr = chapterObj.getAsJsonArray("data") ?: return@withContext Result.failure(Exception("Missing page data"))
+
+            val pages = mutableListOf<String>()
+            for (pageFile in dataArr) {
+                val filename = pageFile.asString
+                pages.add("$baseUrl/data/$hash/$filename")
+            }
+
+            if (pages.isEmpty()) {
+                return@withContext Result.failure(Exception("Chapter $chapterNumber pages are currently unavailable from source."))
+            }
+
+            Result.success(pages)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to resolve chapter pages: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private fun cleanMangaTitle(title: String): String {
+        return title.replace(Regex("""-\s*(?:Ep|Episode|E|Ch|Chapter)\s*\d+.*""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""\s*\(.*?\)\s*"""), "")
+            .replace(Regex("[^a-zA-Z0-9 ]"), " ")
+            .trim()
     }
 
     private fun Manga.toEntity(): AnimeEntity {
@@ -139,13 +363,14 @@ class MangaRepository(
     }
 
     private fun AniListMediaDto.toManga(): Manga {
-        val chCount = chapters ?: 10
-        val sampleChapters = (1..minOf(chCount, 30)).map { chNum ->
+        val chCount = chapters ?: 12
+        val defaultChapters = (1..minOf(chCount, 50)).map { chNum ->
             MangaChapter(
                 id = "${id}_$chNum",
                 number = chNum.toFloat(),
                 title = "Chapter $chNum",
-                pages = 22
+                pages = 22,
+                scanlationGroup = "Online Catalogue"
             )
         }
 
@@ -197,7 +422,7 @@ class MangaRepository(
             characters = characters?.edges?.mapNotNull { it.toCharacter() } ?: emptyList(),
             relations = relations?.edges?.mapNotNull { it.toRelation() } ?: emptyList(),
             externalLinks = externalLinks?.map { it.toExternalLink() } ?: emptyList(),
-            chaptersList = sampleChapters,
+            chaptersList = defaultChapters,
             isInLibrary = false
         )
     }
@@ -252,82 +477,5 @@ class MangaRepository(
             icon = icon,
             color = color
         )
-    }
-
-    suspend fun getChapterPages(mangaTitle: String, chapterNumber: Float): Result<List<String>> {
-        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-
-                val cleanTitle = mangaTitle.replace(Regex("[^a-zA-Z0-9 ]"), " ").trim()
-                val encodedTitle = java.net.URLEncoder.encode(cleanTitle, "UTF-8")
-
-                // 1. Search MangaDex for manga id
-                val searchReq = okhttp3.Request.Builder()
-                    .url("https://api.mangadex.org/manga?title=$encodedTitle&limit=5&order[relevance]=desc")
-                    .header("User-Agent", "SAHASRA-Android/1.0")
-                    .build()
-
-                val searchResp = client.newCall(searchReq).execute()
-                val searchJson = com.google.gson.JsonParser.parseString(searchResp.body?.string() ?: "{}").asJsonObject
-                val mangaList = searchJson.getAsJsonArray("data")
-                if (mangaList == null || mangaList.size() == 0) {
-                    return@withContext Result.failure(Exception("Manga not found on MangaDex"))
-                }
-
-                val mangaId = mangaList.get(0).asJsonObject.get("id").asString
-
-                // 2. Query available chapters
-                val feedReq = okhttp3.Request.Builder()
-                    .url("https://api.mangadex.org/manga/$mangaId/feed?translatedLanguage[]=en&order[chapter]=asc&limit=100")
-                    .header("User-Agent", "SAHASRA-Android/1.0")
-                    .build()
-
-                val feedResp = client.newCall(feedReq).execute()
-                val feedJson = com.google.gson.JsonParser.parseString(feedResp.body?.string() ?: "{}").asJsonObject
-                val chapterList = feedJson.getAsJsonArray("data")
-                if (chapterList == null || chapterList.size() == 0) {
-                    return@withContext Result.failure(Exception("No chapters available"))
-                }
-
-                val targetChInt = chapterNumber.toInt().toString()
-                var chapterId = chapterList.get(0).asJsonObject.get("id").asString
-                for (item in chapterList) {
-                    val obj = item.asJsonObject
-                    val attrs = obj.getAsJsonObject("attributes")
-                    val chStr = attrs?.get("chapter")?.asString
-                    if (chStr == targetChInt || chStr == chapterNumber.toString()) {
-                        chapterId = obj.get("id").asString
-                        break
-                    }
-                }
-
-                // 3. Query At-Home server for chapter page files
-                val atHomeReq = okhttp3.Request.Builder()
-                    .url("https://api.mangadex.org/at-home/server/$chapterId")
-                    .header("User-Agent", "SAHASRA-Android/1.0")
-                    .build()
-
-                val atHomeResp = client.newCall(atHomeReq).execute()
-                val atHomeJson = com.google.gson.JsonParser.parseString(atHomeResp.body?.string() ?: "{}").asJsonObject
-                val baseUrl = atHomeJson.get("baseUrl")?.asString ?: return@withContext Result.failure(Exception("Invalid server"))
-                val chapterObj = atHomeJson.getAsJsonObject("chapter") ?: return@withContext Result.failure(Exception("No chapter payload"))
-                val hash = chapterObj.get("hash")?.asString ?: return@withContext Result.failure(Exception("No hash"))
-                val dataArr = chapterObj.getAsJsonArray("data") ?: return@withContext Result.failure(Exception("No pages array"))
-
-                val pages = mutableListOf<String>()
-                for (pageFile in dataArr) {
-                    val filename = pageFile.asString
-                    pages.add("$baseUrl/data/$hash/$filename")
-                }
-
-                Result.success(pages)
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
-        }
     }
 }

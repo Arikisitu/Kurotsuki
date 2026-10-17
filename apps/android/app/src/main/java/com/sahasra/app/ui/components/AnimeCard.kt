@@ -205,7 +205,7 @@ fun MangaCard(
             )
 
             // Format Badge (Top Right)
-            val formatText = manga.format.name.replace("_", " ")
+            val formatText = manga.formatBadgeText()
             if (formatText.isNotBlank()) {
                 Box(
                     modifier = Modifier

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.sahasra.app.domain.model.Anime
+import com.sahasra.app.domain.model.Manga
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
 import com.sahasra.app.ui.theme.SahasraCrimson
@@ -245,3 +247,224 @@ fun HeroSection(
         }
     }
 }
+
+@Composable
+fun MangaHeroSection(
+    manga: Manga,
+    modifier: Modifier = Modifier,
+    onReadClick: (Manga) -> Unit,
+    onDetailsClick: (Manga) -> Unit,
+    onBookmarkClick: (Manga) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(420.dp)
+            .clickable { onDetailsClick(manga) }
+    ) {
+        // Hero Background Artwork
+        val imageUrl = manga.bannerImage ?: manga.coverImage.bestImageUrl()
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = manga.title.userPreferredTitle(),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Gradient overlay fading downwards
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0x3308090B),
+                            Color(0x9908090B),
+                            SahasraBg
+                        ),
+                        startY = 0f,
+                        endY = 1100f
+                    )
+                )
+        )
+
+        // Content
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 20.dp)
+        ) {
+            // Spotlight Tag
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(SahasraCrimson)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "MANGA SPOTLIGHT",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.sp
+                        )
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xCC111318))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = manga.formatBadgeText(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = SahasraAccent,
+                            fontSize = 10.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Title
+            Text(
+                text = manga.title.userPreferredTitle(),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = SahasraTextPrimary,
+                    lineHeight = 30.sp
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Metadata row: score, chapters, genres
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (manga.averageScore != null && manga.averageScore > 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0x33000000))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Star,
+                            contentDescription = null,
+                            tint = SahasraScoreGold,
+                            modifier = Modifier.height(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = manga.displayScoreOutOfTen(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = SahasraTextPrimary
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "${manga.chapters ?: "?"} chapters",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = SahasraTextSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+
+                if (manga.genres.isNotEmpty()) {
+                    Text(
+                        text = "• ${manga.genres.take(2).joinToString(", ")}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = SahasraAccent,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Read Now Button
+                Button(
+                    onClick = { onReadClick(manga) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SahasraAccent,
+                        contentColor = SahasraBg
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.MenuBook,
+                        contentDescription = "Read",
+                        modifier = Modifier.height(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Read Chapter 1",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                // Details Button
+                OutlinedButton(
+                    onClick = { onDetailsClick(manga) },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = SahasraTextPrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text(
+                        text = "Details",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                }
+
+                // Bookmark icon button
+                IconButton(
+                    onClick = { onBookmarkClick(manga) },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SahasraSurface)
+                        .height(44.dp)
+                        .width(44.dp)
+                ) {
+                    Icon(
+                        imageVector = if (manga.isInLibrary) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
+                        contentDescription = "Bookmark",
+                        tint = if (manga.isInLibrary) SahasraCrimson else SahasraTextPrimary
+                    )
+                }
+            }
+        }
+    }
+}
+

@@ -23,9 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
-import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -81,6 +84,11 @@ fun MangaDetailScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
+    var selectedSource by remember { mutableStateOf("MangaDex HQ") }
+    val availableSources = listOf("MangaDex HQ", "Kotatsu Mirror", "Webtoons")
+    var chapterSearchQuery by remember { mutableStateOf("") }
+    var isSortAscending by remember { mutableStateOf(true) }
+
     fun loadData() {
         scope.launch {
             isLoading = true
@@ -117,6 +125,22 @@ fun MangaDetailScreen(
             }
             manga != null -> {
                 val item = manga!!
+
+                val filteredChapters = remember(item.chaptersList, chapterSearchQuery, isSortAscending) {
+                    val filtered = if (chapterSearchQuery.isBlank()) {
+                        item.chaptersList
+                    } else {
+                        item.chaptersList.filter {
+                            (it.title?.contains(chapterSearchQuery, ignoreCase = true) == true) ||
+                            it.number.toString().contains(chapterSearchQuery)
+                        }
+                    }
+                    if (isSortAscending) {
+                        filtered.sortedBy { it.number }
+                    } else {
+                        filtered.sortedByDescending { it.number }
+                    }
+                }
 
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     // Header Banner
@@ -228,6 +252,22 @@ fun MangaDetailScreen(
                                             color = SahasraTextSecondary
                                         )
                                     )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color(0x338585F7))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = item.formatBadgeText(),
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = SahasraAccent,
+                                                fontSize = 10.sp
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -261,7 +301,7 @@ fun MangaDetailScreen(
                                     .height(48.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.MenuBook,
+                                    imageVector = Icons.AutoMirrored.Rounded.MenuBook,
                                     contentDescription = "Read",
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -328,23 +368,133 @@ fun MangaDetailScreen(
                         }
                     }
 
-                    // Chapters Section
+                    // Source Selector
                     item {
-                        Text(
-                            text = "Chapters (${item.chaptersList.size})",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = SahasraTextPrimary
-                            ),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    items(item.chaptersList) { chapter ->
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .offset(y = (-10).dp)
+                        ) {
+                            Text(
+                                text = "Catalogue Source",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = SahasraTextSecondary
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                availableSources.forEach { source ->
+                                    val isSelected = selectedSource == source
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSelected) SahasraAccent else SahasraSurface)
+                                            .border(
+                                                1.dp,
+                                                if (isSelected) SahasraAccent else SahasraBorder,
+                                                RoundedCornerShape(10.dp)
+                                            )
+                                            .clickable { selectedSource = source }
+                                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = source,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) SahasraBg else SahasraTextPrimary,
+                                                fontSize = 12.sp
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Chapters Header & Search
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Chapters (${filteredChapters.size})",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SahasraTextPrimary
+                                    )
+                                )
+
+                                Row(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(SahasraSurface)
+                                        .border(1.dp, SahasraBorder, RoundedCornerShape(8.dp))
+                                        .clickable { isSortAscending = !isSortAscending }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (isSortAscending) "Oldest First" else "Newest First",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = SahasraAccent,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            OutlinedTextField(
+                                value = chapterSearchQuery,
+                                onValueChange = { chapterSearchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        text = "Search chapters (e.g. 100, Prologue)...",
+                                        color = SahasraTextSecondary,
+                                        fontSize = 13.sp
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Search,
+                                        contentDescription = null,
+                                        tint = SahasraTextSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = SahasraSurface,
+                                    unfocusedContainerColor = SahasraSurface,
+                                    focusedBorderColor = SahasraAccent,
+                                    unfocusedBorderColor = SahasraBorder,
+                                    focusedTextColor = SahasraTextPrimary,
+                                    unfocusedTextColor = SahasraTextPrimary
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    items(filteredChapters, key = { it.id }) { chapter ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(SahasraSurface)
                                 .border(1.dp, SahasraBorder, RoundedCornerShape(12.dp))
@@ -360,21 +510,50 @@ fun MangaDetailScreen(
                                         color = SahasraTextPrimary
                                     )
                                 )
-                                Text(
-                                    text = "${chapter.pages ?: 20} pages",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = SahasraTextSecondary,
-                                        fontSize = 11.sp
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "${chapter.pages ?: 20} pages",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = SahasraTextSecondary,
+                                            fontSize = 11.sp
+                                        )
                                     )
-                                )
+                                    Text(
+                                        text = "• EN",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = SahasraAccent,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                    Text(
+                                        text = "• $selectedSource",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = SahasraTextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                }
                             }
 
-                            Icon(
-                                imageVector = Icons.Rounded.MenuBook,
-                                contentDescription = "Read",
-                                tint = SahasraAccent,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            IconButton(
+                                onClick = { onReadChapter(item, chapter) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(SahasraElevated)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.MenuBook,
+                                    contentDescription = "Read",
+                                    tint = SahasraAccent,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                     }
 

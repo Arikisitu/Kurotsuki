@@ -33,6 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,10 +47,12 @@ import androidx.compose.ui.unit.sp
 import com.sahasra.app.R
 import com.sahasra.app.domain.model.Anime
 import com.sahasra.app.domain.model.Manga
+import com.sahasra.app.domain.model.MangaFormat
 import com.sahasra.app.ui.components.AnimeCard
 import com.sahasra.app.ui.components.MangaCard
 import com.sahasra.app.ui.components.ErrorState
 import com.sahasra.app.ui.components.HeroSection
+import com.sahasra.app.ui.components.MangaHeroSection
 import com.sahasra.app.ui.components.HomeSkeleton
 import com.sahasra.app.ui.components.MediaCarousel
 import com.sahasra.app.ui.theme.SahasraAccent
@@ -71,6 +76,8 @@ fun HomeScreen(
     onSeeAllClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var selectedFormat by remember { mutableStateOf("All") }
+    val formatFilters = listOf("All", "Manga", "Manhwa", "Manhua", "Light Novel")
 
     Box(
         modifier = Modifier
@@ -141,24 +148,119 @@ fun HomeScreen(
                             }
                         }
                     } else {
-                        // MANGA MODE
-                        item(key = "manga_categories") {
-                            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                Text(
-                                    text = "Manga & Light Novels",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = SahasraTextPrimary
-                                    )
-                                )
-                                Text(
-                                    text = "Discover trending manga, Korean webtoons, and serializations",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = SahasraTextSecondary)
+                        // MANGA MODE - Futon Experience
+                        val filteredTrending = when (selectedFormat) {
+                            "Manga" -> uiState.trendingManga.filter { it.format == MangaFormat.MANGA && !it.isManhwa() && !it.isManhua() }
+                            "Manhwa" -> uiState.trendingManga.filter { it.isManhwa() }
+                            "Manhua" -> uiState.trendingManga.filter { it.isManhua() }
+                            "Light Novel" -> uiState.trendingManga.filter { it.format == MangaFormat.NOVEL || it.format == MangaFormat.ONE_SHOT }
+                            else -> uiState.trendingManga
+                        }
+                        val filteredPopular = when (selectedFormat) {
+                            "Manga" -> uiState.popularManga.filter { it.format == MangaFormat.MANGA && !it.isManhwa() && !it.isManhua() }
+                            "Manhwa" -> uiState.popularManga.filter { it.isManhwa() }
+                            "Manhua" -> uiState.popularManga.filter { it.isManhua() }
+                            "Light Novel" -> uiState.popularManga.filter { it.format == MangaFormat.NOVEL || it.format == MangaFormat.ONE_SHOT }
+                            else -> uiState.popularManga
+                        }
+
+                        // Featured Hero Manga
+                        val mangaHero = filteredTrending.firstOrNull() ?: uiState.featuredManga
+                        mangaHero?.let { featured ->
+                            item(key = "manga_hero_${featured.id}") {
+                                MangaHeroSection(
+                                    manga = featured,
+                                    onReadClick = onReadClick,
+                                    onDetailsClick = onMangaClick,
+                                    onBookmarkClick = { viewModel.toggleMangaBookmark(it) }
                                 )
                             }
                         }
 
-                        if (uiState.trendingManga.isNotEmpty()) {
+                        // Futon Multi-Source Engine Status Banner
+                        item(key = "manga_futon_status") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SahasraSurface)
+                                    .border(1.dp, SahasraBorder, RoundedCornerShape(12.dp))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Futon Multi-Source Engine",
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SahasraTextPrimary
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Online chapters via MangaDex At-Home & Kotatsu multi-catalogue parsers",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = SahasraTextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(SahasraElevated)
+                                        .border(1.dp, SahasraAccent, RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "ACTIVE",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SahasraAccent,
+                                            fontSize = 10.sp
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        // Format Filter Chips
+                        item(key = "manga_format_filters") {
+                            LazyRow(
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            ) {
+                                items(formatFilters) { filter ->
+                                    val isSelected = selectedFormat == filter
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(if (isSelected) SahasraAccent else SahasraSurface)
+                                            .border(
+                                                1.dp,
+                                                if (isSelected) SahasraAccent else SahasraBorder,
+                                                RoundedCornerShape(20.dp)
+                                            )
+                                            .clickable { selectedFormat = filter }
+                                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = filter,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = if (isSelected) SahasraBg else SahasraTextSecondary,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 12.sp
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (filteredTrending.isNotEmpty()) {
                             item(key = "section_trending_manga") {
                                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                                     Row(
@@ -169,7 +271,7 @@ fun HomeScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Trending Manga",
+                                            text = if (selectedFormat == "All") "Trending Manga" else "Trending $selectedFormat",
                                             style = MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = SahasraTextPrimary
@@ -181,7 +283,7 @@ fun HomeScreen(
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.trendingManga) { mangaItem ->
+                                        items(filteredTrending) { mangaItem ->
                                             MangaCard(
                                                 manga = mangaItem,
                                                 cardWidth = 135.dp,
@@ -193,7 +295,7 @@ fun HomeScreen(
                             }
                         }
 
-                        if (uiState.popularManga.isNotEmpty()) {
+                        if (filteredPopular.isNotEmpty()) {
                             item(key = "section_popular_manga") {
                                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                                     Row(
@@ -216,7 +318,7 @@ fun HomeScreen(
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.popularManga) { mangaItem ->
+                                        items(filteredPopular) { mangaItem ->
                                             MangaCard(
                                                 manga = mangaItem,
                                                 cardWidth = 135.dp,

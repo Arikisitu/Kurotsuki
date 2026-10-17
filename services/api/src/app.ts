@@ -10,7 +10,7 @@ import { corsMiddleware } from './middleware/cors';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/logger';
 import { globalRateLimiter } from './middleware/rateLimiter';
-import { animeRouter, authRouter, healthRouter, mangaRouter } from './routes';
+import { animeRouter, authRouter, healthRouter, mangaRouter, streamRouter } from './routes';
 
 export function createApp(): Express {
   const app = express();
@@ -39,6 +39,7 @@ export function createApp(): Express {
   // Mount API Routes
   app.use('/api/v1/anime', animeRouter);
   app.use('/api/v1/manga', mangaRouter);
+  app.use('/api/v1/stream', streamRouter);
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1', healthRouter);
 

@@ -74,6 +74,13 @@ export const API_ENDPOINTS = {
     READING: '/api/v1/progress/reading',
   },
 
+  // --- Streaming & One-Click Source Resolution ---
+  STREAM: {
+    RESOLVE: '/api/v1/stream/resolve',
+    EXTENSIONS: '/api/v1/stream/repo/extensions',
+    PING: '/api/v1/stream/ping',
+  },
+
   // --- System & Telemetry ---
   SYSTEM: {
     HEALTH: '/api/v1/health',

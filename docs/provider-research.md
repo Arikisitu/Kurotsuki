@@ -120,3 +120,81 @@ This document establishes the official research, capability audit, licensing rev
 | **Kitsu** | Yes | No | No | No | No | 60 req/min |
 | **YouTube** | No | No | No | No | Yes (Trailers/Episodes) | Standard Quota |
 | **Gutendex**| Yes | Yes (Text) | Yes (EPUB) | No | No | Open |
+
+---
+
+## 7. Aniyomi Extension Repositories & One-Click Streaming Aggregator
+
+### 7.1 Repository Catalogues Audited
+
+#### 1. Yūzōnō Anime Repository
+- **Catalogue URL**: `https://raw.githubusercontent.com/yuzono/anime-repo/repo/index.min.json`
+- **Format**: JSON (`index.min.json`)
+- **Total Extensions Indexed**: 251 extensions
+- **Audit Findings**:
+  - Contains Android APK extensions targeting anime and media sites.
+  - Multi-language distribution: `all` (31), `en` (54), `hi` (1), `ar` (28), `es` (27), `fr` (23), `pt-BR` (19), `it` (16), `ru` (14), `de` (11), `zh` (8), `id` (7), `pl` (4), `ko` (3), `tr` (2), `uk` (2), `bg` (1), `sr` (1).
+  - High-tier English sources: `AnimePahe`, `KickAssAnime`, `Gogoanime/AnimeKai`, `WCOStream`, `SubsPlease`, `Torrentio`, `Debrid Index`.
+  - High-tier Hindi sources: `YoMovies` (Hindi movies & series), `AnimeWorld India` (Hindi dub & subbed anime).
+
+#### 2. Secozzi Aniyomi Extensions
+- **Catalogue URL**: `https://raw.githubusercontent.com/Secozzi/aniyomi-extensions/refs/heads/repo/index.pb`
+- **Fallback URL**: `https://raw.githubusercontent.com/Secozzi/aniyomi-extensions/repo/index.min.json`
+- **Format**: Gzipped Binary Protocol Buffer (`index.pb`)
+- **Audit Findings**:
+  - Gzip decompression reveals Tachiyomi extension protobuf wire structure with Field 101 containing repeated extension messages.
+  - Decoded packages: `Jellyfin` (`eu.kanade.tachiyomi.animeextension.all.jellyfin`), `Stremio` (`eu.kanade.tachiyomi.animeextension.all.stremio`), `Torbox` (`eu.kanade.tachiyomi.animeextension.all.torbox`).
+  - Target: Self-hosted and debrid media streaming engines.
+
+---
+
+### 7.2 Strict Language Filtering Policy
+
+SAHASRA enforces a **strict language whitelist** for one-click streaming:
+
+| Language | ISO Code | Status | Role & Handling |
+| :--- | :--- | :--- | :--- |
+| **English** | `en` | **ALLOWED** | Primary audio dubs and English subtitle tracks |
+| **Hindi** | `hi` | **ALLOWED** | Hindi dubbed anime and localized Indian regional feeds |
+| **Japanese** | `ja` | **ALLOWED** | Original Japanese studio audio with translated subtitle tracks |
+| **Multi-Language** | `all` | **CONDITIONAL** | Allowed ONLY if internal streams/audio strictly match `en`, `hi`, or `ja` |
+| **All Other Languages** | `es`, `fr`, `ru`, `pt-BR`, `it`, `de`, `ar`, `zh`, etc. | **STRICTLY REJECTED** | Automatically dropped during repository sync and source discovery |
+
+> [!IMPORTANT]
+> **Locale vs. Audio Language vs. Subtitles**:  
+> A provider marked `en` does not necessarily mean the audio track is English. It often means Japanese audio with English subtitles (Sub). SAHASRA explicitly distinguishes:
+> - **Audio Language**: The spoken language of the audio track (`en`, `hi`, `ja`).
+> - **Audio Type**: `dub` (voiceover) vs `sub` (original Japanese audio with translated captions).
+> - **Subtitle Track**: Language code for text overlays.
+
+---
+
+### 7.3 Headless In-Built Extension Architecture (Zero-UI Streaming)
+
+To provide a seamless, non-technical experience:
+1. **Zero Extension Plumbing in Main Navigation**:
+   - The user never sees "Extensions", "Sources", "Extension Stores", or APK installation prompts.
+   - All extension repositories are synchronized silently in the background by `RepoParserService` (`services/api/src/services/repo-parser.ts`) and cached in memory.
+2. **One-Click Auto-Resolution Pipeline**:
+   - User opens an anime and clicks Play.
+   - `StreamResolverService` concurrently queries matching providers for the title and episode.
+3. **Parallel Latency (TTFB) Ping Test**:
+   - Concurrent lightweight `HEAD` or ranged `GET` (`Range: bytes=0-2048`) with a 2000ms timeout against all candidate URLs.
+   - Measures real Time to First Byte (TTFB in ms).
+   - Verifies `200 OK` or `206 Partial Content`. Drops dead links, 403 Forbidden, 404 Not Found, or slow servers.
+4. **Speed & Quality Hierarchy Ranking**:
+   - **1st Priority (Response Latency)**: Lowest TTFB latency in ms so video starts instantly without buffering.
+   - **2nd Priority (Resolution Tier)**: `1080p` > `720p` > `480p` > `Auto`.
+   - **3rd Priority (Language Match)**: Matches user's preferred audio language (`hi`, `en`, `ja`) and sub/dub preference.
+5. **Seamless Auto-Failover Queue**:
+   - Passes `#1` top-ranked source into player immediately.
+   - Retains `#2, #3, #4...` in a fallback priority queue.
+   - If stream `#1` throws a network/decode error or stalls/buffers for > 3.5 seconds, player automatically hot-swaps to stream `#2` at the exact same playback position (`currentPosition`) without interrupting the user.
+6. **Anime Streaming Player UI**:
+   - Audio selector (Hindi, English, Japanese, Sub, Dub).
+   - Subtitle toggle (ON/OFF).
+   - Playback speed (0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x).
+   - Double-tap 10s skips (left side = -10s, right side = +10s with ripple icon).
+   - Resolution switcher (1080p, 720p, 480p, 360p, Auto).
+   - In-player source switcher dropdown showing pre-ranked sources with latency and language tags (e.g. `[EN] AnimePahe Turbo (1080p • 42ms)`).
+

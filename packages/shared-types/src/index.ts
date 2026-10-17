@@ -9,3 +9,4 @@ export * from './models/anime.js';
 export * from './models/manga.js';
 export * from './models/user.js';
 export * from './models/provider.js';
+export * from './models/stream.js';

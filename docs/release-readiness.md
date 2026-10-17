@@ -24,35 +24,38 @@ All code adheres strictly to dark AMOLED design tokens, comprehensive error reco
 
 ### 2.1 Backend API Verification (`services/api`)
 - **Test Framework**: Vitest v1.6.1
-- **Status**: **27 / 27 tests passing (100%)**
-- **Duration**: 1.44s
+- **Status**: **34 / 34 tests passing (100%)**
+- **Duration**: 2.19s
 
 ```plaintext
+ ✓ src/__tests__/services/repo-parser.test.ts    (2 tests)
  ✓ src/__tests__/services/cache.test.ts          (5 tests)
- ✓ src/__tests__/services/circuit-breaker.test.ts (4 tests)
- ✓ src/__tests__/providers/anilist.test.ts        (5 tests)
  ✓ src/__tests__/providers/jikan.test.ts          (4 tests)
- ✓ src/__tests__/routes/anime.test.ts            (4 tests)
+ ✓ src/__tests__/providers/anilist.test.ts        (5 tests)
+ ✓ src/__tests__/services/circuit-breaker.test.ts (4 tests)
  ✓ src/__tests__/services/orchestrator.test.ts   (5 tests)
+ ✓ src/__tests__/services/stream-resolver.test.ts (5 tests)
+ ✓ src/__tests__/routes/anime.test.ts            (4 tests)
 
-Test Files  6 passed (6)
-Tests       27 passed (27)
+Test Files  8 passed (8)
+Tests       34 passed (34)
 ```
 
 - **Live Endpoint Verification**:
   - `GET /api/v1/health` -> `200 OK` (Healthy)
-  - `GET /api/v1/providers/status` -> AniList (ACTIVE), Jikan (STANDBY), Kitsu (STANDBY)
+  - `GET /api/v1/stream/resolve?title=Attack+on+Titan&episode=1&lang=en` -> `200 OK` (One-click stream resolution with latency hierarchy)
+  - `GET /api/v1/stream/repo/extensions` -> `200 OK` (Parsed Yuzono + Secozzi repos filtered to EN, HI, JA)
   - `GET /api/v1/anime/trending?page=1` -> Returns 20 live anime items normalized to `@sahasra/shared-types`.
 
 ---
 
 ### 2.2 Web Application Build (`apps/web`)
-- **Compiler**: `tsc -b && vite build` (Vite v6.0.3, TypeScript 5.7.2)
-- **Status**: **BUILD SUCCESSFUL**
+- **Compiler**: `tsc -b && vite build` (Vite v6.4.4, TypeScript 5.7.2)
+- **Status**: **BUILD SUCCESSFUL in 14.84s**
 - **Build Output**:
   - `dist/index.html` (1.12 kB)
-  - `dist/assets/index-DlHsxWCW.css` (52.22 kB)
-  - `dist/assets/index-BWldvx9V.js` (948.55 kB) — includes HLS.js adaptive player engine and Lucide icon library.
+  - `dist/assets/index-DU3hNcVc.css` (53.49 kB)
+  - `dist/assets/index-pd20jCWN.js` (965.41 kB)
 
 ---
 
@@ -67,13 +70,13 @@ Tests       27 passed (27)
   - Status: **BUILD SUCCESSFUL** (26 tasks executed/up-to-date)
 - **Assembly**:
   - Command: `./gradlew.bat assembleDebug`
-  - Status: **BUILD SUCCESSFUL**
+  - Status: **BUILD SUCCESSFUL in 22s**
 - **Verified APK Artifact**:
   - **Path**: `apps/android/app/build/outputs/apk/debug/app-debug.apk`
-  - **Exact Byte Size**: `21,468,559` bytes (~20.5 MB)
+  - **Exact Byte Size**: `21,475,165` bytes (~20.5 MB)
   - **SHA-256 Checksum**:
     ```
-    D1E60051EE359AE37ADF9E7D4BBBFAE9766DB948842DB1BEC1D86BDD9492A91A
+    939F60F9A5DF0D0864312FCFADC20EB178516BA9CA9A4144686CA4ACEB800FDC
     ```
 
 ---

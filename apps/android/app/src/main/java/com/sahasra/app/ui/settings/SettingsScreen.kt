@@ -28,9 +28,11 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -82,6 +84,19 @@ fun SettingsScreen(
     }
     var isAutoplayEnabled by remember {
         mutableStateOf(prefs.getBoolean("autoplay_next", true))
+    }
+    var playbackLanguage by remember {
+        val code = prefs.getString("playback_language", "en") ?: "en"
+        val label = when (code) {
+            "hi" -> "Hindi"
+            "ja" -> "Japanese"
+            else -> "English"
+        }
+        mutableStateOf(label)
+    }
+    var audioTypePreference by remember {
+        val code = prefs.getString("playback_audio_type", "dub") ?: "dub"
+        mutableStateOf(if (code == "dub") "Dubbed" else "Subtitled")
     }
     var defaultReaderMode by remember {
         mutableStateOf(prefs.getString("default_reader_mode", "Vertical Webtoon") ?: "Vertical Webtoon")
@@ -190,6 +205,42 @@ fun SettingsScreen(
         // Playback
         SettingsCategory(title = "Video Player") {
             SettingsOptionRow(
+                icon = Icons.Rounded.Translate,
+                title = "Streaming Audio Language",
+                value = playbackLanguage,
+                onClick = {
+                    val next = when (playbackLanguage) {
+                        "English" -> "Hindi"
+                        "Hindi" -> "Japanese"
+                        else -> "English"
+                    }
+                    playbackLanguage = next
+                    val code = when (next) {
+                        "Hindi" -> "hi"
+                        "Japanese" -> "ja"
+                        else -> "en"
+                    }
+                    prefs.edit().putString("playback_language", code).apply()
+                }
+            )
+
+            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
+
+            SettingsOptionRow(
+                icon = Icons.Rounded.Speed,
+                title = "Audio Track Preference",
+                value = audioTypePreference,
+                onClick = {
+                    val next = if (audioTypePreference == "Dubbed") "Subtitled" else "Dubbed"
+                    audioTypePreference = next
+                    val code = if (next == "Dubbed") "dub" else "sub"
+                    prefs.edit().putString("playback_audio_type", code).apply()
+                }
+            )
+
+            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
+
+            SettingsOptionRow(
                 icon = Icons.Rounded.HighQuality,
                 title = "Preferred Video Quality",
                 value = selectedQuality,
@@ -234,6 +285,16 @@ fun SettingsScreen(
                     isAutoplayEnabled = it
                     prefs.edit().putBoolean("autoplay_next", it).apply()
                 }
+            )
+        }
+
+        // In-Built Stream Aggregator Attribution
+        SettingsCategory(title = "In-Built Stream Aggregator") {
+            SettingsActionRow(
+                icon = Icons.Rounded.Layers,
+                title = "Extension Catalogues Connected",
+                subtitle = "Yūzōnō (251 extensions) & Secozzi (Protobuf). Whitelist: EN, HI, JA",
+                onClick = { }
             )
         }
 

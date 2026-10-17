@@ -7,3 +7,4 @@ export * from './anime';
 export * from './manga';
 export * from './health';
 export * from './auth';
+export * from './stream';

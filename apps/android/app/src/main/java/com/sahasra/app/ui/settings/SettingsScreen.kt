@@ -25,9 +25,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.CloudDownload
+import androidx.compose.material.icons.rounded.Crop
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Language
@@ -40,6 +43,7 @@ import androidx.compose.material.icons.rounded.Subtitles
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.VideoSettings
 import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.material.icons.rounded.ZoomIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -80,8 +84,11 @@ fun SettingsScreen(
 
     var selectedTheme by remember { mutableStateOf("Dark (AMOLED)") }
     var selectedLanguage by remember { mutableStateOf("English (US)") }
-    var selectedReaderMode by remember { mutableStateOf("Vertical Webtoon") }
     var selectedQuality by remember { mutableStateOf("Auto (1080p)") }
+    var selectedReaderMode by remember { mutableStateOf("Vertical Webtoon") }
+    var selectedMangaSource by remember { mutableStateOf("MangaDex HQ") }
+    var cropBorders by remember { mutableStateOf("Enabled") }
+    var highQualityImages by remember { mutableStateOf("32-bit (Full)") }
     var cacheNotice by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -159,7 +166,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "AniList, MangaDex & Yūzōnō Active",
+                        text = "Anikku Engine & Futon Reader Active",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF10B981),
                             fontSize = 11.sp
@@ -190,30 +197,16 @@ fun SettingsScreen(
             )
             DividerLine()
             SettingsNavRow(
-                icon = Icons.Rounded.MenuBook,
-                title = "Manga Reader",
-                value = selectedReaderMode,
-                onClick = {
-                    val next = when (selectedReaderMode) {
-                        "Vertical Webtoon" -> "Paged (Right to Left)"
-                        "Paged (Right to Left)" -> "Paged (Left to Right)"
-                        else -> "Vertical Webtoon"
-                    }
-                    selectedReaderMode = next
-                }
-            )
-            DividerLine()
-            SettingsNavRow(
-                icon = Icons.Rounded.Download,
-                title = "Downloads",
-                value = "Internal Storage (48.2 GB free)",
+                icon = Icons.Rounded.Sync,
+                title = "Tracking Accounts",
+                value = "AniList & MAL",
                 onClick = {}
             )
             DividerLine()
             SettingsNavRow(
-                icon = Icons.Rounded.Sync,
-                title = "Tracking",
-                value = "AniList & MAL",
+                icon = Icons.Rounded.Download,
+                title = "Downloads Storage",
+                value = "Internal (48.2 GB free)",
                 onClick = {}
             )
             DividerLine()
@@ -225,8 +218,8 @@ fun SettingsScreen(
             )
         }
 
-        // Group 2: Anime
-        SettingsGroupHeader(title = "Anime")
+        // Group 2: Anime (Anikku Engine)
+        SettingsGroupHeader(title = "Anime (Anikku Engine)")
         SettingsCard {
             SettingsNavRow(
                 icon = Icons.Rounded.CloudDownload,
@@ -238,21 +231,21 @@ fun SettingsScreen(
             DividerLine()
             SettingsNavRow(
                 icon = Icons.Rounded.PlayCircle,
-                title = "Player",
-                value = "ExoPlayer (HW Accel)",
+                title = "Video Player Engine",
+                value = "Media3 ExoPlayer (HW Accel)",
                 onClick = {}
             )
             DividerLine()
             SettingsNavRow(
                 icon = Icons.Rounded.Subtitles,
-                title = "Subtitles",
+                title = "Preferred Audio & Subtitles",
                 value = "English, Hindi, Japanese",
                 onClick = {}
             )
             DividerLine()
             SettingsNavRow(
                 icon = Icons.Rounded.VideoSettings,
-                title = "Playback",
+                title = "Default Stream Quality",
                 value = selectedQuality,
                 onClick = {
                     val next = when (selectedQuality) {
@@ -266,26 +259,77 @@ fun SettingsScreen(
             DividerLine()
             SettingsNavRow(
                 icon = Icons.Rounded.Download,
-                title = "Downloads",
+                title = "Anime Downloads",
                 value = "720p Preferred",
                 onClick = {}
             )
         }
 
-        // Group 3: Advanced
-        SettingsGroupHeader(title = "Advanced")
+        // Group 3: Manga (Futon Engine)
+        SettingsGroupHeader(title = "Manga (Futon Engine)")
+        SettingsCard {
+            SettingsNavRow(
+                icon = Icons.Rounded.CloudDownload,
+                title = "Manga Catalogues",
+                value = selectedMangaSource,
+                highlightValue = true,
+                onClick = {
+                    val next = when (selectedMangaSource) {
+                        "MangaDex HQ" -> "Kotatsu Mirror"
+                        "Kotatsu Mirror" -> "Webtoons HQ"
+                        else -> "MangaDex HQ"
+                    }
+                    selectedMangaSource = next
+                }
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.AutoMirrored.Rounded.MenuBook,
+                title = "Default Reader Mode",
+                value = selectedReaderMode,
+                onClick = {
+                    val next = when (selectedReaderMode) {
+                        "Vertical Webtoon" -> "Paged (Right to Left)"
+                        "Paged (Right to Left)" -> "Paged (Left to Right)"
+                        else -> "Vertical Webtoon"
+                    }
+                    selectedReaderMode = next
+                }
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Crop,
+                title = "Crop Page Borders",
+                value = cropBorders,
+                onClick = {
+                    cropBorders = if (cropBorders == "Enabled") "Disabled" else "Enabled"
+                }
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.AutoFixHigh,
+                title = "Image Quality",
+                value = highQualityImages,
+                onClick = {
+                    highQualityImages = if (highQualityImages == "32-bit (Full)") "16-bit (Low Memory)" else "32-bit (Full)"
+                }
+            )
+        }
+
+        // Group 4: Advanced & Storage
+        SettingsGroupHeader(title = "Advanced & Storage")
         SettingsCard {
             SettingsNavRow(
                 icon = Icons.Rounded.Wifi,
-                title = "Network",
+                title = "Network & DNS",
                 value = "DNS-over-HTTPS (DoH)",
                 onClick = {}
             )
             DividerLine()
             SettingsNavRow(
                 icon = Icons.Rounded.Storage,
-                title = "Data & Storage",
-                value = "Clear image & media cache",
+                title = "Clear Media Cache",
+                value = "Purge images & temp files",
                 onClick = {
                     Coil.imageLoader(context).apply {
                         memoryCache?.clear()

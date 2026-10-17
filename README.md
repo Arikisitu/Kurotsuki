@@ -143,7 +143,7 @@ Get the latest verified build from the **[GitHub Releases](https://github.com/Ar
 
 | File | Type | Recommended for | SHA-256 Checksum |
 |:---|:---:|:---|:---|
-| 🟢 [`kurotsuki-v0.1.0-debug.apk`](https://github.com/Arikisitu/Kurotsuki/releases/download/v0.1.0/kurotsuki-v0.1.0-debug.apk) | Universal APK | All Android devices (Android 8.0+) — **Recommended** | `E10D9FD10A3387C0E6B677CE07098A887C25EE1EBA45BCF8D3214A3550DE6716` |
+| 🟢 [`kurotsuki-v0.1.0-debug.apk`](https://github.com/Arikisitu/Kurotsuki/releases/download/v0.1.0/kurotsuki-v0.1.0-debug.apk) | Universal APK | All Android devices (Android 8.0+) — **Recommended** | `50893016185CDFF0F7068233170E111A3D84C0196526905534C7E36C546E46F2` |
 
 </div>
 

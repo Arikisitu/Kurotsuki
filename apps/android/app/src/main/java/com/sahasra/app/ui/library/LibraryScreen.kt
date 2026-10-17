@@ -39,14 +39,14 @@ import com.sahasra.app.domain.model.Anime
 import com.sahasra.app.domain.model.AnimeFormat
 import com.sahasra.app.domain.model.Manga
 import com.sahasra.app.ui.components.AnimeCard
-import com.sahasra.app.ui.theme.SahasraAccent
-import com.sahasra.app.ui.theme.SahasraAccentGlow
-import com.sahasra.app.ui.theme.SahasraBg
-import com.sahasra.app.ui.theme.SahasraBorder
-import com.sahasra.app.ui.theme.SahasraElevated
-import com.sahasra.app.ui.theme.SahasraSurface
-import com.sahasra.app.ui.theme.SahasraTextPrimary
-import com.sahasra.app.ui.theme.SahasraTextSecondary
+import com.sahasra.app.ui.theme.KurotsukiBg
+import com.sahasra.app.ui.theme.KurotsukiBorder
+import com.sahasra.app.ui.theme.KurotsukiElevated
+import com.sahasra.app.ui.theme.KurotsukiRed
+import com.sahasra.app.ui.theme.KurotsukiRedGlow
+import com.sahasra.app.ui.theme.KurotsukiSurface
+import com.sahasra.app.ui.theme.KurotsukiTextPrimary
+import com.sahasra.app.ui.theme.KurotsukiTextSecondary
 
 @Composable
 fun LibraryScreen(
@@ -59,7 +59,7 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SahasraBg)
+            .background(KurotsukiBg)
             .statusBarsPadding()
     ) {
         // Header
@@ -75,13 +75,13 @@ fun LibraryScreen(
                     text = "My Library",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = SahasraTextPrimary
+                        color = KurotsukiTextPrimary
                     )
                 )
                 Text(
                     text = "${uiState.totalCount} saved titles",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = SahasraTextSecondary
+                        color = KurotsukiTextSecondary
                     )
                 )
             }
@@ -104,10 +104,10 @@ fun LibraryScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) SahasraElevated else SahasraSurface)
+                        .background(if (isSelected) KurotsukiElevated else KurotsukiSurface)
                         .border(
                             1.dp,
-                            if (isSelected) SahasraAccent else SahasraBorder,
+                            if (isSelected) KurotsukiRed else KurotsukiBorder,
                             RoundedCornerShape(20.dp)
                         )
                         .clickable { viewModel.setFilter(filter) }
@@ -116,7 +116,7 @@ fun LibraryScreen(
                     Text(
                         text = "${filter.name.lowercase().replaceFirstChar { it.uppercase() }} ($count)",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = if (isSelected) SahasraAccent else SahasraTextSecondary,
+                            color = if (isSelected) KurotsukiRed else KurotsukiTextSecondary,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     )
@@ -153,12 +153,12 @@ fun LibraryScreen(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape)
-                        .background(SahasraAccentGlow)
+                        .background(KurotsukiRedGlow)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.BookmarkBorder,
                         contentDescription = null,
-                        tint = SahasraAccent,
+                        tint = KurotsukiRed,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -169,7 +169,7 @@ fun LibraryScreen(
                     text = "Your library is empty",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = SahasraTextPrimary
+                        color = KurotsukiTextPrimary
                     )
                 )
 
@@ -178,7 +178,7 @@ fun LibraryScreen(
                 Text(
                     text = "Save your favorite anime and manga using the bookmark icon on any title.",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = SahasraTextSecondary,
+                        color = KurotsukiTextSecondary,
                         textAlign = TextAlign.Center
                     )
                 )

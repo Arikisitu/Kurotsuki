@@ -11,7 +11,8 @@ data class StreamSource(
     val audioType: String = "dub", // "sub", "dub"
     val ttfbMs: Long = 50L,
     val serverName: String = "Primary Edge",
-    val status: String = "active"
+    val status: String = "active",
+    val headers: Map<String, String> = emptyMap()
 )
 
 data class StreamResolutionResult(

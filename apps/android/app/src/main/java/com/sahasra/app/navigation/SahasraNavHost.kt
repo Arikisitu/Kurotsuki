@@ -209,6 +209,7 @@ fun SahasraNavHost(
                 }
             )
         ) { backStackEntry ->
+            val mediaId = backStackEntry.arguments?.getInt("mediaId") ?: 0
             val rawTitle = backStackEntry.arguments?.getString("title") ?: "Player"
             val rawUrl = backStackEntry.arguments?.getString("streamUrl") ?: ""
             val title = runCatching { URLDecoder.decode(rawTitle, StandardCharsets.UTF_8.toString()) }.getOrDefault(rawTitle)
@@ -216,6 +217,7 @@ fun SahasraNavHost(
 
             PlayerScreen(
                 title = title,
+                mediaId = mediaId,
                 streamUrl = streamUrl,
                 onBackClick = { navController.popBackStack() }
             )

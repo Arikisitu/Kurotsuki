@@ -99,6 +99,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlayerScreen(
     title: String,
+    mediaId: Int = 0,
     streamUrl: String?,
     onBackClick: () -> Unit
 ) {
@@ -170,7 +171,20 @@ fun PlayerScreen(
         isPlaybackReady = false
         try {
             val mediaItem = MediaItem.fromUri(Uri.parse(source.url))
-            exoPlayer.setMediaItem(mediaItem)
+            if (source.headers.isNotEmpty()) {
+                val httpDataSourceFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+                    .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36")
+                    .setDefaultRequestProperties(source.headers)
+                    .setAllowCrossProtocolRedirects(true)
+
+                val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context)
+                    .setDataSourceFactory(httpDataSourceFactory)
+
+                val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+                exoPlayer.setMediaSource(mediaSource)
+            } else {
+                exoPlayer.setMediaItem(mediaItem)
+            }
             if (startPosition > 0L) {
                 exoPlayer.seekTo(startPosition)
             }
@@ -209,14 +223,15 @@ fun PlayerScreen(
                     title = title,
                     episode = 1,
                     preferredLanguage = lang,
-                    preferredAudioType = audioType
+                    preferredAudioType = audioType,
+                    mediaId = mediaId
                 )
                 activeSource = res.primary
                 fallbackQueue = res.fallbackQueue
                 allWorkingSources = res.allWorkingSources
                 prepareSource(res.primary, 0L)
             } catch (e: Exception) {
-                playbackError = "Failed to resolve sources: ${e.message}"
+                playbackError = e.message ?: "Failed to resolve streams for this episode."
             } finally {
                 isResolving = false
             }

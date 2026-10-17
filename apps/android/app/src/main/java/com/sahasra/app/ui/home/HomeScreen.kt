@@ -55,6 +55,9 @@ import com.sahasra.app.ui.components.HeroSection
 import com.sahasra.app.ui.components.MangaHeroSection
 import com.sahasra.app.ui.components.HomeSkeleton
 import com.sahasra.app.ui.components.MediaCarousel
+import com.sahasra.app.ui.manga.FutonMangaSection
+import com.sahasra.app.ui.theme.FutonMangaGold
+import com.sahasra.app.ui.theme.FutonVelvetBlack
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
 import com.sahasra.app.ui.theme.SahasraBorder
@@ -95,14 +98,23 @@ fun HomeScreen(
                 )
             }
             else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    item {
-                        Spacer(modifier = Modifier.height(72.dp))
-                    }
+                if (uiState.selectedTab == HomeTab.MANGA) {
+                    FutonMangaSection(
+                        trendingManga = uiState.trendingManga,
+                        popularManga = uiState.popularManga,
+                        onMangaClick = onMangaClick,
+                        onReadClick = onReadClick,
+                        onBookmarkClick = { viewModel.toggleMangaBookmark(it) },
+                        onSearchClick = onSearchClick
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(72.dp))
+                        }
 
-                    if (uiState.selectedTab == HomeTab.ANIME) {
                         // ANIME MODE
                         uiState.featuredAnime?.let { featured ->
                             item(key = "hero_${featured.id}") {
@@ -147,192 +159,10 @@ fun HomeScreen(
                                 )
                             }
                         }
-                    } else {
-                        // MANGA MODE - Futon Experience
-                        val filteredTrending = when (selectedFormat) {
-                            "Manga" -> uiState.trendingManga.filter { it.format == MangaFormat.MANGA && !it.isManhwa() && !it.isManhua() }
-                            "Manhwa" -> uiState.trendingManga.filter { it.isManhwa() }
-                            "Manhua" -> uiState.trendingManga.filter { it.isManhua() }
-                            "Light Novel" -> uiState.trendingManga.filter { it.format == MangaFormat.NOVEL || it.format == MangaFormat.ONE_SHOT }
-                            else -> uiState.trendingManga
+
+                        item {
+                            Spacer(modifier = Modifier.height(90.dp))
                         }
-                        val filteredPopular = when (selectedFormat) {
-                            "Manga" -> uiState.popularManga.filter { it.format == MangaFormat.MANGA && !it.isManhwa() && !it.isManhua() }
-                            "Manhwa" -> uiState.popularManga.filter { it.isManhwa() }
-                            "Manhua" -> uiState.popularManga.filter { it.isManhua() }
-                            "Light Novel" -> uiState.popularManga.filter { it.format == MangaFormat.NOVEL || it.format == MangaFormat.ONE_SHOT }
-                            else -> uiState.popularManga
-                        }
-
-                        // Featured Hero Manga
-                        val mangaHero = filteredTrending.firstOrNull() ?: uiState.featuredManga
-                        mangaHero?.let { featured ->
-                            item(key = "manga_hero_${featured.id}") {
-                                MangaHeroSection(
-                                    manga = featured,
-                                    onReadClick = onReadClick,
-                                    onDetailsClick = onMangaClick,
-                                    onBookmarkClick = { viewModel.toggleMangaBookmark(it) }
-                                )
-                            }
-                        }
-
-                        // Futon Multi-Source Engine Status Banner
-                        item(key = "manga_futon_status") {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(SahasraSurface)
-                                    .border(1.dp, SahasraBorder, RoundedCornerShape(12.dp))
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Futon Multi-Source Engine",
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = SahasraTextPrimary
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Online chapters via MangaDex At-Home & Kotatsu multi-catalogue parsers",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SahasraTextSecondary,
-                                            fontSize = 11.sp
-                                        )
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(SahasraElevated)
-                                        .border(1.dp, SahasraAccent, RoundedCornerShape(6.dp))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "ACTIVE",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = SahasraAccent,
-                                            fontSize = 10.sp
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        // Format Filter Chips
-                        item(key = "manga_format_filters") {
-                            LazyRow(
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            ) {
-                                items(formatFilters) { filter ->
-                                    val isSelected = selectedFormat == filter
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(20.dp))
-                                            .background(if (isSelected) SahasraAccent else SahasraSurface)
-                                            .border(
-                                                1.dp,
-                                                if (isSelected) SahasraAccent else SahasraBorder,
-                                                RoundedCornerShape(20.dp)
-                                            )
-                                            .clickable { selectedFormat = filter }
-                                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                                    ) {
-                                        Text(
-                                            text = filter,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = if (isSelected) SahasraBg else SahasraTextSecondary,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                                fontSize = 12.sp
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        if (filteredTrending.isNotEmpty()) {
-                            item(key = "section_trending_manga") {
-                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = if (selectedFormat == "All") "Trending Manga" else "Trending $selectedFormat",
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = SahasraTextPrimary
-                                            )
-                                        )
-                                    }
-
-                                    LazyRow(
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        items(filteredTrending) { mangaItem ->
-                                            MangaCard(
-                                                manga = mangaItem,
-                                                cardWidth = 135.dp,
-                                                onClick = { onMangaClick(mangaItem) }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (filteredPopular.isNotEmpty()) {
-                            item(key = "section_popular_manga") {
-                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "Popular Webtoons & Manhwa",
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = SahasraTextPrimary
-                                            )
-                                        )
-                                    }
-
-                                    LazyRow(
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        items(filteredPopular) { mangaItem ->
-                                            MangaCard(
-                                                manga = mangaItem,
-                                                cardWidth = 135.dp,
-                                                onClick = { onMangaClick(mangaItem) }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(90.dp))
                     }
                 }
 
@@ -411,7 +241,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (!isAnime) SahasraAccent else Color.Transparent)
+                                .background(if (!isAnime) FutonMangaGold else Color.Transparent)
                                 .clickable { viewModel.setTab(HomeTab.MANGA) }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
@@ -419,14 +249,14 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = Icons.Rounded.Book,
                                     contentDescription = null,
-                                    tint = if (!isAnime) SahasraBg else SahasraTextSecondary,
+                                    tint = if (!isAnime) FutonVelvetBlack else SahasraTextSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Manga",
                                     fontWeight = FontWeight.Bold,
-                                    color = if (!isAnime) SahasraBg else SahasraTextSecondary,
+                                    color = if (!isAnime) FutonVelvetBlack else SahasraTextSecondary,
                                     fontSize = 12.sp
                                 )
                             }

@@ -9,11 +9,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Arikisitu/sahasra/releases/tag/v0.1.0">
+    <img src="https://img.shields.io/badge/Download_APK-v0.1.0_Debug-FEA628?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
+  </a>
+  <img src="https://img.shields.io/badge/Theme-Futon_Onyx_Gold-0D0D0D?style=for-the-badge&logo=materialdesign&logoColor=FEA628" alt="Futon Onyx Gold" />
+  <img src="https://img.shields.io/badge/Manga_Engine-AppFuton%2FFuton-FEA628?style=for-the-badge" alt="AppFuton Engine" />
   <img src="https://img.shields.io/badge/Status-Verified_&_Tested-8585F7?style=for-the-badge" alt="Status" />
   <img src="https://img.shields.io/badge/Platforms-Web_•_Android_•_Android_TV_•_API-E64B55?style=for-the-badge" alt="Platforms" />
-  <img src="https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Kotlin-2.0.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/Tests-27%2F27_Passing-4ADE80?style=for-the-badge" alt="Tests" />
 </p>
 
 ---
@@ -23,9 +25,14 @@
 **SAHASRA** is an ultra-fast, aesthetics-first platform for discovering, streaming metadata tracking, reading progress tracking, and cataloging anime and manga. Driven by a unified edge API powered by AniList GraphQL (with Jikan & Kitsu resilience fallbacks), SAHASRA pairs high-performance client rendering with modern fluid design tokens across Web, Android phones, and Android TV.
 
 ### ✨ Key Capabilities
+- **Futon Manga Hub & Reader (AppFuton Replica)**: Complete implementation of the flagship [AppFuton/Futon](https://github.com/AppFuton/Futon) experience:
+  - **Onyx Gold Aesthetic**: Velvet Black base (`#0D0D0D`), Warm Obsidian surface (`#121110`), and radiant Manga Gold (`#FEA628`) active accents.
+  - **Strict 18:13 Media Cards**: 16dp rounded corner cards with subtle Warm Clay borders, star ratings, and Warm Ivory typography.
+  - **Catalogue Source Switcher**: Seamless switching across open catalogues (`MangaDex (Official Scans)`, `Kotatsu Multi-Mirror`, `Webtoons HQ`, `MangaSee`, `Bato.to`).
+  - **Dedicated Sub-Tabs**: `POPULAR`, `LATEST`, `WEBTOONS`, and `SOURCES` (Catalogue manager with live latency and health monitors).
+  - **Futon Reader**: Triple-engine reader supporting **Webtoon** (gapless continuous vertical strip), **Paged RTL** (traditional Japanese manga), and **Paged LTR** with floating HUD page counters and seekbar.
 - **Dedicated Anime & Manga Discovery**: Top centered segmented switcher (**Anime | Manga**) offering separated discovery, trending feeds, seasonal schedules, and media carousels.
 - **YouTube-Style Video Player**: Resolution/quality dropdown ("Auto (1080p)", "1080p", "720p", "480p", "360p"), playback speed selector (0.5x–2.0x), time/buffered scrubber, 10-second skip controls, and stream recovery on Web (HLS.js/HTML5) and Android (Media3 ExoPlayer).
-- **Real Manga Reader via MangaDex**: Live chapter manifests and page image feeds fetched from `api.mangadex.org` with dynamic page counts, webtoon vertical continuous scroll, single-page flip mode, and honest fallback with certified publisher links (MangaPlus, Viz, BookWalker).
 - **Working Settings & Cache Management**: Working user preferences across restarts via `SharedPreferences` on Android and `localStorage` on Web, including theme toggles, default quality/speed, and real Coil disk/memory cache clearing.
 - **Zero-Barrier Public Discovery**: Out-of-the-box trending anime & manga, seasonal breakdowns, airing calendars, and faceted search without mandatory authentication.
 - **Anti-Piracy Compliance**: Strict creator-rights adherence. Displays official licensed outbound partners (Crunchyroll, Netflix, Hulu, MangaPlus, Viz, BookWalker) alongside embedded trailers and legal player engines.
@@ -113,9 +120,9 @@ cd apps/android
 ./gradlew.bat testDebugUnitTest
 ./gradlew.bat assembleDebug
 ```
-- **Generated APK**: `apps/android/app/build/outputs/apk/debug/app-debug.apk`
-- **APK Size**: `21,382,299` bytes (~20.4 MB)
-- **SHA-256 Checksum**: `D65097866B02DC93D990B4E9CE0BC02EB60FF3FAF839E5EF540E40C4FB5DD3F2`
+- **Generated APK**: `sahasra-v0.1.0-debug.apk` (Download via [GitHub Releases](https://github.com/Arikisitu/sahasra/releases/tag/v0.1.0))
+- **APK Size**: `21,705,357` bytes (~20.7 MB)
+- **SHA-256 Checksum**: `77EF40115C64668789FDB4AF530599E672818B0845C25FE3F590555FED664897`
 
 ---
 

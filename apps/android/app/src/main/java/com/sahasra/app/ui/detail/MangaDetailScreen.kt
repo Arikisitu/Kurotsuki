@@ -1,5 +1,6 @@
 package com.sahasra.app.ui.detail
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -60,6 +61,15 @@ import com.sahasra.app.domain.model.Manga
 import com.sahasra.app.domain.model.MangaChapter
 import com.sahasra.app.ui.components.ErrorState
 import com.sahasra.app.ui.components.HeroSkeleton
+import com.sahasra.app.ui.theme.FutonEspresso
+import com.sahasra.app.ui.theme.FutonMangaGold
+import com.sahasra.app.ui.theme.FutonMangaGoldSecondary
+import com.sahasra.app.ui.theme.FutonVelvetBlack
+import com.sahasra.app.ui.theme.FutonWarmClay
+import com.sahasra.app.ui.theme.FutonWarmElevated
+import com.sahasra.app.ui.theme.FutonWarmIvory
+import com.sahasra.app.ui.theme.FutonWarmObsidian
+import com.sahasra.app.ui.theme.FutonWarmSurface
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
 import com.sahasra.app.ui.theme.SahasraBorder
@@ -111,7 +121,7 @@ fun MangaDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SahasraBg)
+            .background(FutonVelvetBlack)
     ) {
         when {
             isLoading && manga == null -> {
@@ -163,9 +173,9 @@ fun MangaDetailScreen(
                                     .background(
                                         Brush.verticalGradient(
                                             colors = listOf(
-                                                Color(0x6608090B),
-                                                Color(0xB308090B),
-                                                SahasraBg
+                                                Color(0x660D0D0D),
+                                                Color(0xB30D0D0D),
+                                                FutonVelvetBlack
                                             )
                                         )
                                     )
@@ -184,11 +194,11 @@ fun MangaDetailScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .width(115.dp)
-                                    .aspectRatio(2f / 3f)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(SahasraCardBg)
-                                    .border(1.5.dp, SahasraBorder, RoundedCornerShape(12.dp))
+                                    .width(120.dp)
+                                    .aspectRatio(13f / 18f)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(FutonWarmObsidian)
+                                    .border(1.5.dp, FutonWarmClay.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
                             ) {
                                 AsyncImage(
                                     model = item.coverImage.bestImageUrl(),
@@ -205,7 +215,7 @@ fun MangaDetailScreen(
                                     text = item.title.userPreferredTitle(),
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = SahasraTextPrimary
+                                        color = FutonWarmIvory
                                     ),
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
@@ -216,7 +226,7 @@ fun MangaDetailScreen(
                                 Text(
                                     text = item.authorNames(),
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = SahasraAccent,
+                                        color = FutonMangaGold,
                                         fontWeight = FontWeight.Medium
                                     )
                                 )
@@ -232,7 +242,7 @@ fun MangaDetailScreen(
                                             Icon(
                                                 imageVector = Icons.Rounded.Star,
                                                 contentDescription = null,
-                                                tint = SahasraScoreGold,
+                                                tint = FutonMangaGold,
                                                 modifier = Modifier.size(14.dp)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
@@ -240,7 +250,7 @@ fun MangaDetailScreen(
                                                 text = item.displayScoreOutOfTen(),
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = FontWeight.Bold,
-                                                    color = SahasraTextPrimary
+                                                    color = FutonWarmIvory
                                                 )
                                             )
                                         }
@@ -249,21 +259,21 @@ fun MangaDetailScreen(
                                     Text(
                                         text = "• ${item.chapters ?: "?"} chapters",
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SahasraTextSecondary
+                                            color = FutonWarmClay
                                         )
                                     )
 
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(Color(0x338585F7))
+                                            .background(FutonEspresso.copy(alpha = 0.45f))
                                             .padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
                                         Text(
                                             text = item.formatBadgeText(),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                color = SahasraAccent,
+                                                color = FutonMangaGold,
                                                 fontSize = 10.sp
                                             )
                                         )
@@ -292,24 +302,26 @@ fun MangaDetailScreen(
                                     onReadChapter(item, firstChapter)
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = SahasraAccent,
-                                    contentColor = SahasraBg
+                                    containerColor = FutonMangaGold,
+                                    contentColor = FutonVelvetBlack
                                 ),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(48.dp)
+                                    .height(52.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Rounded.MenuBook,
                                     contentDescription = "Read",
+                                    tint = FutonVelvetBlack,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Read Chapter 1",
+                                    text = "START READING CH. 1",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
+                                    fontSize = 14.sp,
+                                    color = FutonVelvetBlack
                                 )
                             }
 
@@ -321,22 +333,24 @@ fun MangaDetailScreen(
                                     }
                                 },
                                 colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = SahasraSurface,
-                                    contentColor = if (item.isInLibrary) SahasraCrimson else SahasraTextPrimary
+                                    containerColor = FutonWarmSurface,
+                                    contentColor = if (item.isInLibrary) FutonMangaGold else FutonWarmIvory
                                 ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.height(48.dp)
+                                border = BorderStroke(1.dp, FutonWarmClay.copy(alpha = 0.35f)),
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.height(52.dp)
                             ) {
                                 Icon(
                                     imageVector = if (item.isInLibrary) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
                                     contentDescription = "Save",
-                                    tint = if (item.isInLibrary) SahasraCrimson else SahasraTextPrimary,
+                                    tint = if (item.isInLibrary) FutonMangaGold else FutonWarmIvory,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = if (item.isInLibrary) "In Library" else "Save",
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (item.isInLibrary) FutonMangaGold else FutonWarmIvory
                                 )
                             }
                         }
@@ -354,14 +368,14 @@ fun MangaDetailScreen(
                                 text = "Synopsis",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = SahasraTextPrimary
+                                    color = FutonWarmIvory
                                 )
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = item.cleanDescription(),
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = SahasraTextSecondary,
+                                    color = FutonWarmClay,
                                     lineHeight = 22.sp
                                 )
                             )
@@ -380,7 +394,7 @@ fun MangaDetailScreen(
                                 text = "Catalogue Source",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = SahasraTextSecondary
+                                    color = FutonWarmClay
                                 )
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -393,10 +407,10 @@ fun MangaDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10.dp))
-                                            .background(if (isSelected) SahasraAccent else SahasraSurface)
+                                            .background(if (isSelected) FutonMangaGold else FutonWarmSurface)
                                             .border(
                                                 1.dp,
-                                                if (isSelected) SahasraAccent else SahasraBorder,
+                                                if (isSelected) FutonMangaGold else FutonWarmClay.copy(alpha = 0.25f),
                                                 RoundedCornerShape(10.dp)
                                             )
                                             .clickable { selectedSource = source }
@@ -406,7 +420,7 @@ fun MangaDetailScreen(
                                             text = source,
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isSelected) SahasraBg else SahasraTextPrimary,
+                                                color = if (isSelected) FutonVelvetBlack else FutonWarmIvory,
                                                 fontSize = 12.sp
                                             )
                                         )
@@ -432,15 +446,15 @@ fun MangaDetailScreen(
                                     text = "Chapters (${filteredChapters.size})",
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = SahasraTextPrimary
+                                        color = FutonWarmIvory
                                     )
                                 )
 
                                 Row(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(SahasraSurface)
-                                        .border(1.dp, SahasraBorder, RoundedCornerShape(8.dp))
+                                        .background(FutonWarmSurface)
+                                        .border(1.dp, FutonWarmClay.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
                                         .clickable { isSortAscending = !isSortAscending }
                                         .padding(horizontal = 10.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -448,7 +462,7 @@ fun MangaDetailScreen(
                                     Text(
                                         text = if (isSortAscending) "Oldest First" else "Newest First",
                                         style = MaterialTheme.typography.labelSmall.copy(
-                                            color = SahasraAccent,
+                                            color = FutonMangaGold,
                                             fontWeight = FontWeight.Bold
                                         )
                                     )
@@ -463,7 +477,7 @@ fun MangaDetailScreen(
                                 placeholder = {
                                     Text(
                                         text = "Search chapters (e.g. 100, Prologue)...",
-                                        color = SahasraTextSecondary,
+                                        color = FutonWarmClay,
                                         fontSize = 13.sp
                                     )
                                 },
@@ -471,19 +485,19 @@ fun MangaDetailScreen(
                                     Icon(
                                         imageVector = Icons.Rounded.Search,
                                         contentDescription = null,
-                                        tint = SahasraTextSecondary,
+                                        tint = FutonWarmClay,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 },
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = SahasraSurface,
-                                    unfocusedContainerColor = SahasraSurface,
-                                    focusedBorderColor = SahasraAccent,
-                                    unfocusedBorderColor = SahasraBorder,
-                                    focusedTextColor = SahasraTextPrimary,
-                                    unfocusedTextColor = SahasraTextPrimary
+                                    focusedContainerColor = FutonWarmSurface,
+                                    unfocusedContainerColor = FutonWarmSurface,
+                                    focusedBorderColor = FutonMangaGold,
+                                    unfocusedBorderColor = FutonWarmClay.copy(alpha = 0.25f),
+                                    focusedTextColor = FutonWarmIvory,
+                                    unfocusedTextColor = FutonWarmIvory
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -495,9 +509,9 @@ fun MangaDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(SahasraSurface)
-                                .border(1.dp, SahasraBorder, RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(FutonWarmSurface)
+                                .border(1.dp, FutonWarmClay.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
                                 .clickable { onReadChapter(item, chapter) }
                                 .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -507,7 +521,7 @@ fun MangaDetailScreen(
                                     text = chapter.title ?: "Chapter ${chapter.number}",
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        color = SahasraTextPrimary
+                                        color = FutonWarmIvory
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -518,14 +532,14 @@ fun MangaDetailScreen(
                                     Text(
                                         text = "${chapter.pages ?: 20} pages",
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SahasraTextSecondary,
+                                            color = FutonWarmClay,
                                             fontSize = 11.sp
                                         )
                                     )
                                     Text(
                                         text = "• EN",
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SahasraAccent,
+                                            color = FutonMangaGold,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -533,7 +547,7 @@ fun MangaDetailScreen(
                                     Text(
                                         text = "• $selectedSource",
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SahasraTextSecondary,
+                                            color = FutonWarmClay,
                                             fontSize = 11.sp
                                         )
                                     )
@@ -545,12 +559,12 @@ fun MangaDetailScreen(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(SahasraElevated)
+                                    .background(FutonWarmElevated)
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Rounded.MenuBook,
                                     contentDescription = "Read",
-                                    tint = SahasraAccent,
+                                    tint = FutonMangaGold,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -574,12 +588,12 @@ fun MangaDetailScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0x9908090B))
+                            .background(Color(0xCC0D0D0D))
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = SahasraTextPrimary,
+                            tint = FutonWarmIvory,
                             modifier = Modifier.size(20.dp)
                         )
                     }

@@ -30,9 +30,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ClosedCaption
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.HighQuality
 import androidx.compose.material.icons.rounded.Layers
@@ -128,6 +132,7 @@ fun PlayerScreen(
     // Dialog & Dropdown visibility
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showSourceDialog by remember { mutableStateOf(false) }
+    var sourceFilterCategory by remember { mutableStateOf("All") }
     var showResolutionDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
 
@@ -786,8 +791,17 @@ fun PlayerScreen(
             }
         }
 
-        // Sources Switcher Dialog with Speed Tags
+        // Sources Switcher Dialog with Speed Tags & Category Filters
         if (showSourceDialog) {
+            val displayedSources = remember(allWorkingSources, sourceFilterCategory) {
+                when (sourceFilterCategory) {
+                    "Sub" -> allWorkingSources.filter { it.audioType.equals("sub", ignoreCase = true) }
+                    "Dub" -> allWorkingSources.filter { it.audioType.equals("dub", ignoreCase = true) && !it.audioLanguage.equals("hi", ignoreCase = true) }
+                    "Hindi" -> allWorkingSources.filter { it.audioLanguage.equals("hi", ignoreCase = true) }
+                    else -> allWorkingSources
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -797,56 +811,229 @@ fun PlayerScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .width(340.dp)
+                        .widthIn(min = 360.dp, max = 500.dp)
+                        .fillMaxWidth(0.92f)
                         .clip(RoundedCornerShape(20.dp))
                         .background(SahasraSurface)
                         .border(1.dp, SahasraBorder, RoundedCornerShape(20.dp))
+                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                         .padding(20.dp)
                 ) {
-                    Text(
-                        text = "Speed-Ranked Sources",
-                        style = MaterialTheme.typography.titleMedium.copy(color = SahasraTextPrimary, fontWeight = FontWeight.Bold)
+                    // Header Row with Title, Count badge, and Close Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Speed-Ranked Sources",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    color = SahasraTextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0x338585F7))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "${allWorkingSources.size} Sources",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = SahasraAccent,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { showSourceDialog = false },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Close",
+                                tint = SahasraTextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Category Filter Chips (All, Sub, Dub, Hindi)
+                    val filterChips = listOf(
+                        Triple("All", "All (${allWorkingSources.size})", SahasraAccent),
+                        Triple("Sub", "Sub (${allWorkingSources.count { it.audioType.equals("sub", ignoreCase = true) }})", Color(0xFFAAA7FF)),
+                        Triple("Dub", "Dub (${allWorkingSources.count { it.audioType.equals("dub", ignoreCase = true) && !it.audioLanguage.equals("hi", ignoreCase = true) }})", Color(0xFF60A5FA)),
+                        Triple("Hindi", "Hindi (${allWorkingSources.count { it.audioLanguage.equals("hi", ignoreCase = true) }})", Color(0xFFFBBF24))
                     )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        filterChips.forEach { (categoryKey, label, activeColor) ->
+                            val isChipSelected = sourceFilterCategory == categoryKey
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isChipSelected) activeColor.copy(alpha = 0.25f) else SahasraElevated)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isChipSelected) activeColor else Color.Transparent,
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .clickable { sourceFilterCategory = categoryKey }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = if (isChipSelected) activeColor else SahasraTextSecondary,
+                                        fontWeight = if (isChipSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    LazyColumn(modifier = Modifier.height(260.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(allWorkingSources) { src ->
+                    // Exhaustive Scrollable Sources List
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 220.dp, max = 360.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(displayedSources) { src ->
                             val isCurrent = src.id == activeSource?.id
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(if (isCurrent) Color(0x338585F7) else SahasraElevated)
+                                    .border(
+                                        width = if (isCurrent) 1.5.dp else 1.dp,
+                                        color = if (isCurrent) SahasraAccent else SahasraBorder.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
                                     .clickable {
                                         activeSource = src
+                                        if (src.audioLanguage.equals("hi", ignoreCase = true)) {
+                                            selectedLanguage = "hi"
+                                            selectedAudioType = "dub"
+                                        } else if (src.audioType.equals("dub", ignoreCase = true)) {
+                                            selectedLanguage = "en"
+                                            selectedAudioType = "dub"
+                                        } else {
+                                            selectedLanguage = "ja"
+                                            selectedAudioType = "sub"
+                                        }
                                         showSourceDialog = false
                                         val cur = exoPlayer.currentPosition
                                         prepareSource(src, cur)
+                                        failoverNotice = "Switched to: ${src.providerName} (${src.ttfbMs}ms)"
                                     }
                                     .padding(horizontal = 14.dp, vertical = 10.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = src.providerName,
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             color = if (isCurrent) SahasraAccent else SahasraTextPrimary,
                                             fontWeight = FontWeight.Bold
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Quality chip
+                                        Box(
+                                            modifier = Modifier
+                                                .background(Color(0x22FFFFFF), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = src.quality,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = SahasraTextSecondary,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            )
+                                        }
+                                        // Language badge
+                                        val (badgeBg, badgeFg) = when {
+                                            src.audioLanguage.equals("hi", ignoreCase = true) -> Color(0x33F59E0B) to Color(0xFFFBBF24)
+                                            src.audioType.equals("dub", ignoreCase = true) -> Color(0x333B82F6) to Color(0xFF60A5FA)
+                                            else -> Color(0x338585F7) to Color(0xFFAAA7FF)
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .background(badgeBg, RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${src.audioLanguage.uppercase()} ${src.audioType.uppercase()}",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = badgeFg,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            )
+                                        }
+                                        // Server name
+                                        Text(
+                                            text = src.serverName,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = SahasraTextSecondary.copy(alpha = 0.7f),
+                                                fontSize = 10.sp
+                                            ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "${src.ttfbMs}ms",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = when {
+                                                src.ttfbMs < 800L -> Color(0xFF4ADE80)
+                                                src.ttfbMs < 1200L -> Color(0xFFFBBF24)
+                                                else -> Color(0xFFF87171)
+                                            },
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
                                         )
                                     )
-                                    Text(
-                                        text = "${src.quality} • ${src.audioLanguage.uppercase()} ${src.audioType.uppercase()}",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = SahasraTextSecondary, fontSize = 10.sp)
-                                    )
+                                    if (isCurrent) {
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "ACTIVE",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = SahasraAccent,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 9.sp
+                                            )
+                                        )
+                                    }
                                 }
-                                Text(
-                                    text = "${src.ttfbMs}ms",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = Color(0xFF4ADE80),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
                             }
                         }
                     }

@@ -37,11 +37,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.sahasra.app.navigation.bottomNavItems
-import com.sahasra.app.ui.theme.SahasraAccent
-import com.sahasra.app.ui.theme.SahasraAccentGlow
-import com.sahasra.app.ui.theme.SahasraBorder
-import com.sahasra.app.ui.theme.SahasraSurface
-import com.sahasra.app.ui.theme.SahasraTextSecondary
+import com.sahasra.app.ui.theme.KurotsukiBorder
+import com.sahasra.app.ui.theme.KurotsukiRed
+import com.sahasra.app.ui.theme.KurotsukiRedGlow
+import com.sahasra.app.ui.theme.KurotsukiSurface
+import com.sahasra.app.ui.theme.KurotsukiTextSecondary
 
 @Composable
 fun BottomNavBar(
@@ -54,10 +54,10 @@ fun BottomNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(SahasraSurface)
+            .background(KurotsukiSurface)
             .border(
                 width = 1.dp,
-                color = SahasraBorder,
+                color = KurotsukiBorder,
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
             )
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
@@ -67,7 +67,7 @@ fun BottomNavBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -75,12 +75,12 @@ fun BottomNavBar(
                 val isSelected = currentRoute == item.screen.route
 
                 val iconColor by animateColorAsState(
-                    targetValue = if (isSelected) SahasraAccent else SahasraTextSecondary,
+                    targetValue = if (isSelected) KurotsukiRed else KurotsukiTextSecondary,
                     label = "iconColor"
                 )
 
                 val pillBgColor by animateColorAsState(
-                    targetValue = if (isSelected) SahasraAccentGlow else Color.Transparent,
+                    targetValue = if (isSelected) KurotsukiRedGlow else Color.Transparent,
                     label = "pillBgColor"
                 )
 

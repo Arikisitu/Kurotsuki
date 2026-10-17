@@ -88,6 +88,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.sahasra.app.data.repository.StreamRepository
 import com.sahasra.app.domain.model.StreamSource
+import com.sahasra.app.ui.theme.KurotsukiRed
 import com.sahasra.app.ui.theme.SahasraAccent
 import com.sahasra.app.ui.theme.SahasraBg
 import com.sahasra.app.ui.theme.SahasraBorder
@@ -377,7 +378,7 @@ fun PlayerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircularProgressIndicator(
-                    color = SahasraAccent,
+                    color = KurotsukiRed,
                     modifier = Modifier.size(54.dp),
                     strokeWidth = 4.dp
                 )
@@ -652,12 +653,12 @@ fun PlayerScreen(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(CircleShape)
-                            .background(SahasraAccent)
+                            .background(KurotsukiRed)
                     ) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                             contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = SahasraBg,
+                            tint = Color.White,
                             modifier = Modifier.size(40.dp)
                         )
                     }
@@ -718,8 +719,8 @@ fun PlayerScreen(
                             isUserSeeking = false
                         },
                         colors = SliderDefaults.colors(
-                            thumbColor = SahasraAccent,
-                            activeTrackColor = SahasraAccent,
+                            thumbColor = KurotsukiRed,
+                            activeTrackColor = KurotsukiRed,
                             inactiveTrackColor = Color(0x66FFFFFF)
                         ),
                         modifier = Modifier.fillMaxWidth()
@@ -1069,7 +1070,7 @@ fun PlayerScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (selectedResolution == res) Color(0x338585F7) else Color.Transparent)
+                                .background(if (selectedResolution == res) Color(0x33E53935) else Color.Transparent)
                                 .clickable {
                                     selectedResolution = res
                                     showResolutionDialog = false
@@ -1080,7 +1081,7 @@ fun PlayerScreen(
                             Text(
                                 text = res,
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = if (selectedResolution == res) SahasraAccent else SahasraTextPrimary,
+                                    color = if (selectedResolution == res) KurotsukiRed else SahasraTextPrimary,
                                     fontWeight = if (selectedResolution == res) FontWeight.Bold else FontWeight.Normal
                                 )
                             )
@@ -1118,7 +1119,7 @@ fun PlayerScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (selectedSpeed == speed) Color(0x338585F7) else Color.Transparent)
+                                .background(if (selectedSpeed == speed) Color(0x33E53935) else Color.Transparent)
                                 .clickable {
                                     selectedSpeed = speed
                                     exoPlayer.playbackParameters = PlaybackParameters(speed)
@@ -1130,7 +1131,7 @@ fun PlayerScreen(
                             Text(
                                 text = "${speed}x",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = if (selectedSpeed == speed) SahasraAccent else SahasraTextPrimary,
+                                    color = if (selectedSpeed == speed) KurotsukiRed else SahasraTextPrimary,
                                     fontWeight = if (selectedSpeed == speed) FontWeight.Bold else FontWeight.Normal
                                 )
                             )

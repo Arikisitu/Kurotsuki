@@ -1,24 +1,25 @@
 package com.sahasra.app.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.List
-import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 sealed class Screen(val route: String) {
+    data object Splash : Screen("splash")
     data object Home : Screen("home")
     data object Explore : Screen("explore")
     data object Search : Screen("search")
-    data object Library : Screen("library")
     data object Schedule : Screen("schedule")
+    data object Library : Screen("library")
+    data object Downloads : Screen("downloads")
     data object Settings : Screen("settings")
+    data object AnimeSources : Screen("anime_sources")
 
     data object AnimeDetail : Screen("anime_detail/{animeId}") {
         fun createRoute(animeId: Int): String = "anime_detail/$animeId"
@@ -50,8 +51,7 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Home", Icons.Rounded.Home),
     BottomNavItem(Screen.Explore, "Explore", Icons.Rounded.Explore),
-    BottomNavItem(Screen.Search, "Search", Icons.Rounded.Search),
-    BottomNavItem(Screen.Schedule, "Schedule", Icons.Rounded.CalendarMonth),
-    BottomNavItem(Screen.Library, "Library", Icons.Rounded.VideoLibrary),
+    BottomNavItem(Screen.Library, "Library", Icons.Rounded.Bookmark),
+    BottomNavItem(Screen.Downloads, "Downloads", Icons.Rounded.Download),
     BottomNavItem(Screen.Settings, "Settings", Icons.Rounded.Settings)
 )

@@ -39,9 +39,8 @@ fun SahasraMainApp() {
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
         Screen.Explore.route,
-        Screen.Search.route,
-        Screen.Schedule.route,
         Screen.Library.route,
+        Screen.Downloads.route,
         Screen.Settings.route
     )
 

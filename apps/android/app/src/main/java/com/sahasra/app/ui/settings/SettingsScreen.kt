@@ -24,22 +24,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.HighQuality
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.Subtitles
+import androidx.compose.material.icons.rounded.Sync
+import androidx.compose.material.icons.rounded.VideoSettings
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -57,56 +62,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.Coil
 import com.sahasra.app.R
-import com.sahasra.app.ui.theme.SahasraAccent
-import com.sahasra.app.ui.theme.SahasraBg
-import com.sahasra.app.ui.theme.SahasraBorder
-import com.sahasra.app.ui.theme.SahasraElevated
-import com.sahasra.app.ui.theme.SahasraSuccess
-import com.sahasra.app.ui.theme.SahasraSurface
-import com.sahasra.app.ui.theme.SahasraTextPrimary
-import com.sahasra.app.ui.theme.SahasraTextSecondary
+import com.sahasra.app.ui.theme.KurotsukiBg
+import com.sahasra.app.ui.theme.KurotsukiBorder
+import com.sahasra.app.ui.theme.KurotsukiElevated
+import com.sahasra.app.ui.theme.KurotsukiRed
+import com.sahasra.app.ui.theme.KurotsukiSurface
+import com.sahasra.app.ui.theme.KurotsukiTextPrimary
+import com.sahasra.app.ui.theme.KurotsukiTextSecondary
 
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onAnimeSourcesClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("sahasra_prefs", Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences("kurotsuki_prefs", Context.MODE_PRIVATE) }
 
-    var isAmoledEnabled by remember {
-        mutableStateOf(prefs.getBoolean("amoled_theme", true))
-    }
-    var selectedQuality by remember {
-        mutableStateOf(prefs.getString("streaming_quality", "Auto (1080p)") ?: "Auto (1080p)")
-    }
-    var selectedSpeed by remember {
-        mutableStateOf(prefs.getString("playback_speed", "1.0x") ?: "1.0x")
-    }
-    var isAutoplayEnabled by remember {
-        mutableStateOf(prefs.getBoolean("autoplay_next", true))
-    }
-    var playbackLanguage by remember {
-        val code = prefs.getString("playback_language", "en") ?: "en"
-        val label = when (code) {
-            "hi" -> "Hindi"
-            "ja" -> "Japanese"
-            else -> "English"
-        }
-        mutableStateOf(label)
-    }
-    var audioTypePreference by remember {
-        val code = prefs.getString("playback_audio_type", "dub") ?: "dub"
-        mutableStateOf(if (code == "dub") "Dubbed" else "Subtitled")
-    }
-    var defaultReaderMode by remember {
-        mutableStateOf(prefs.getString("default_reader_mode", "Vertical Webtoon") ?: "Vertical Webtoon")
-    }
+    var selectedTheme by remember { mutableStateOf("Dark (AMOLED)") }
+    var selectedLanguage by remember { mutableStateOf("English (US)") }
+    var selectedReaderMode by remember { mutableStateOf("Vertical Webtoon") }
+    var selectedQuality by remember { mutableStateOf("Auto (1080p)") }
     var cacheNotice by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SahasraBg)
+            .background(KurotsukiBg)
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
@@ -121,7 +102,7 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = "Back",
-                    tint = SahasraTextPrimary
+                    tint = KurotsukiTextPrimary
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -129,25 +110,25 @@ fun SettingsScreen(
                 text = "Settings",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = SahasraTextPrimary
+                    color = KurotsukiTextPrimary
                 )
             )
         }
 
-        // App Card Header
+        // Kurotsuki Header Card
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(SahasraSurface)
-                .border(1.dp, SahasraBorder, RoundedCornerShape(16.dp))
+                .background(KurotsukiSurface)
+                .border(1.dp, KurotsukiBorder, RoundedCornerShape(16.dp))
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.sahasra_logo),
-                contentDescription = "SAHASRA Logo",
+                painter = painterResource(id = R.drawable.kurotsuki_logo),
+                contentDescription = "Kurotsuki Katana Logo",
                 modifier = Modifier
                     .size(54.dp)
                     .clip(CircleShape)
@@ -155,17 +136,17 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = "SAHASRA",
+                    text = "KUROTSUKI",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = SahasraTextPrimary,
+                        color = KurotsukiTextPrimary,
                         letterSpacing = 1.sp
                     )
                 )
                 Text(
-                    text = "Version 0.2.0 • Release",
+                    text = "Version 1.0.0 • Anikku + Futon Core",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = SahasraTextSecondary
+                        color = KurotsukiTextSecondary
                     )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -173,14 +154,14 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Rounded.CheckCircle,
                         contentDescription = null,
-                        tint = SahasraSuccess,
+                        tint = Color(0xFF10B981),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "AniList & MangaDex Connected",
+                        text = "AniList, MangaDex & Yūzōnō Active",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = SahasraSuccess,
+                            color = Color(0xFF10B981),
                             fontSize = 11.sp
                         )
                     )
@@ -188,324 +169,241 @@ fun SettingsScreen(
             }
         }
 
-        // Appearance
-        SettingsCategory(title = "Appearance & Interface") {
-            SettingsToggleRow(
+        // Group 1: General
+        SettingsGroupHeader(title = "General")
+        SettingsCard {
+            SettingsNavRow(
                 icon = Icons.Rounded.Palette,
-                title = "AMOLED Pitch Black Theme",
-                subtitle = "Optimized for OLED displays with true blacks",
-                checked = isAmoledEnabled,
-                onCheckedChange = {
-                    isAmoledEnabled = it
-                    prefs.edit().putBoolean("amoled_theme", it).apply()
+                title = "Appearance",
+                value = selectedTheme,
+                onClick = {
+                    val next = if (selectedTheme == "Dark (AMOLED)") "OLED Midnight" else "Dark (AMOLED)"
+                    selectedTheme = next
                 }
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Language,
+                title = "Language",
+                value = selectedLanguage,
+                onClick = {}
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.MenuBook,
+                title = "Manga Reader",
+                value = selectedReaderMode,
+                onClick = {
+                    val next = when (selectedReaderMode) {
+                        "Vertical Webtoon" -> "Paged (Right to Left)"
+                        "Paged (Right to Left)" -> "Paged (Left to Right)"
+                        else -> "Vertical Webtoon"
+                    }
+                    selectedReaderMode = next
+                }
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Download,
+                title = "Downloads",
+                value = "Internal Storage (48.2 GB free)",
+                onClick = {}
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Sync,
+                title = "Tracking",
+                value = "AniList & MAL",
+                onClick = {}
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Backup,
+                title = "Backup & Restore",
+                value = "Local Backup",
+                onClick = {}
             )
         }
 
-        // Playback
-        SettingsCategory(title = "Video Player") {
-            SettingsOptionRow(
-                icon = Icons.Rounded.Translate,
-                title = "Streaming Audio Language",
-                value = playbackLanguage,
-                onClick = {
-                    val next = when (playbackLanguage) {
-                        "English" -> "Hindi"
-                        "Hindi" -> "Japanese"
-                        else -> "English"
-                    }
-                    playbackLanguage = next
-                    val code = when (next) {
-                        "Hindi" -> "hi"
-                        "Japanese" -> "ja"
-                        else -> "en"
-                    }
-                    prefs.edit().putString("playback_language", code).apply()
-                }
+        // Group 2: Anime
+        SettingsGroupHeader(title = "Anime")
+        SettingsCard {
+            SettingsNavRow(
+                icon = Icons.Rounded.CloudDownload,
+                title = "Anime Sources",
+                value = "7 sources installed",
+                highlightValue = true,
+                onClick = onAnimeSourcesClick
             )
-
-            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
-
-            SettingsOptionRow(
-                icon = Icons.Rounded.Speed,
-                title = "Audio Track Preference",
-                value = audioTypePreference,
-                onClick = {
-                    val next = if (audioTypePreference == "Dubbed") "Subtitled" else "Dubbed"
-                    audioTypePreference = next
-                    val code = if (next == "Dubbed") "dub" else "sub"
-                    prefs.edit().putString("playback_audio_type", code).apply()
-                }
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.PlayCircle,
+                title = "Player",
+                value = "ExoPlayer (HW Accel)",
+                onClick = {}
             )
-
-            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
-
-            SettingsOptionRow(
-                icon = Icons.Rounded.HighQuality,
-                title = "Preferred Video Quality",
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Subtitles,
+                title = "Subtitles",
+                value = "English, Hindi, Japanese",
+                onClick = {}
+            )
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.VideoSettings,
+                title = "Playback",
                 value = selectedQuality,
                 onClick = {
                     val next = when (selectedQuality) {
-                        "Auto (1080p)" -> "1080p"
-                        "1080p" -> "720p"
-                        "720p" -> "480p"
+                        "Auto (1080p)" -> "1080p FHD"
+                        "1080p FHD" -> "720p HD"
                         else -> "Auto (1080p)"
                     }
                     selectedQuality = next
-                    prefs.edit().putString("streaming_quality", next).apply()
                 }
             )
-
-            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
-
-            SettingsOptionRow(
-                icon = Icons.Rounded.Speed,
-                title = "Default Playback Speed",
-                value = selectedSpeed,
-                onClick = {
-                    val next = when (selectedSpeed) {
-                        "1.0x" -> "1.25x"
-                        "1.25x" -> "1.5x"
-                        "1.5x" -> "2.0x"
-                        else -> "1.0x"
-                    }
-                    selectedSpeed = next
-                    prefs.edit().putString("playback_speed", next).apply()
-                }
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Download,
+                title = "Downloads",
+                value = "720p Preferred",
+                onClick = {}
             )
+        }
 
-            HorizontalDivider(color = SahasraBorder, thickness = 0.5.dp)
-
-            SettingsToggleRow(
+        // Group 3: Advanced
+        SettingsGroupHeader(title = "Advanced")
+        SettingsCard {
+            SettingsNavRow(
                 icon = Icons.Rounded.Wifi,
-                title = "Auto-play Next Episode",
-                subtitle = "Advance to the next episode automatically",
-                checked = isAutoplayEnabled,
-                onCheckedChange = {
-                    isAutoplayEnabled = it
-                    prefs.edit().putBoolean("autoplay_next", it).apply()
-                }
+                title = "Network",
+                value = "DNS-over-HTTPS (DoH)",
+                onClick = {}
             )
-        }
-
-        // In-Built Stream Aggregator Attribution
-        SettingsCategory(title = "In-Built Stream Aggregator") {
-            SettingsActionRow(
-                icon = Icons.Rounded.Layers,
-                title = "Extension Catalogues Connected",
-                subtitle = "Yūzōnō (251 extensions) & Secozzi (Protobuf). Whitelist: EN, HI, JA",
-                onClick = { }
-            )
-        }
-
-        // Manga Reader Settings
-        SettingsCategory(title = "Manga Reader") {
-            SettingsOptionRow(
-                icon = Icons.Rounded.MenuBook,
-                title = "Default Reading Mode",
-                value = defaultReaderMode,
+            DividerLine()
+            SettingsNavRow(
+                icon = Icons.Rounded.Storage,
+                title = "Data & Storage",
+                value = "Clear image & media cache",
                 onClick = {
-                    val next = if (defaultReaderMode == "Vertical Webtoon") "Horizontal Paged" else "Vertical Webtoon"
-                    defaultReaderMode = next
-                    prefs.edit().putString("default_reader_mode", next).apply()
-                }
-            )
-        }
-
-        // Data & Cache
-        SettingsCategory(title = "Storage & Cache") {
-            SettingsActionRow(
-                icon = Icons.Rounded.DeleteOutline,
-                title = "Clear Image & HTTP Cache",
-                subtitle = cacheNotice ?: "Frees up temporary downloaded images and scan files",
-                onClick = {
-                    try {
-                        Coil.imageLoader(context).memoryCache?.clear()
-                        Coil.imageLoader(context).diskCache?.clear()
-                        context.cacheDir.deleteRecursively()
-                        cacheNotice = "Cache successfully cleared"
-                        Toast.makeText(context, "Storage cache cleared", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        cacheNotice = "Cleared memory cache"
+                    Coil.imageLoader(context).apply {
+                        memoryCache?.clear()
+                        diskCache?.clear()
                     }
+                    cacheNotice = "Disk & memory cache cleared successfully"
+                    Toast.makeText(context, "Cache Cleared", Toast.LENGTH_SHORT).show()
                 }
             )
         }
 
-        // About & Legal
-        SettingsCategory(title = "About & Licenses") {
-            SettingsActionRow(
-                icon = Icons.Rounded.Info,
-                title = "About SAHASRA",
-                subtitle = "Unified Anime, Manga & Discovery Platform. Open source compliance.",
-                onClick = { }
-            )
+        cacheNotice?.let { notice ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x3310B981))
+                    .border(1.dp, Color(0xFF10B981), RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = notice,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF10B981),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
 @Composable
-private fun SettingsCategory(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = SahasraAccent,
-                letterSpacing = 0.5.sp
-            ),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(SahasraSurface)
-                .border(1.dp, SahasraBorder, RoundedCornerShape(14.dp))
-        ) {
-            content()
-        }
-    }
+private fun SettingsGroupHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall.copy(
+            fontWeight = FontWeight.Bold,
+            color = KurotsukiRed,
+            fontSize = 12.sp,
+            letterSpacing = 1.sp
+        ),
+        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 6.dp)
+    )
 }
 
 @Composable
-private fun SettingsToggleRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
+private fun SettingsCard(content: @Composable () -> Unit) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(KurotsukiSurface)
+            .border(1.dp, KurotsukiBorder, RoundedCornerShape(16.dp))
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = SahasraAccent,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = SahasraTextPrimary
-                )
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = SahasraTextSecondary,
-                    fontSize = 11.sp
-                )
-            )
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = SahasraAccent,
-                checkedTrackColor = SahasraElevated,
-                uncheckedThumbColor = SahasraTextSecondary,
-                uncheckedTrackColor = SahasraSurface
-            )
-        )
+        content()
     }
 }
 
 @Composable
-private fun SettingsOptionRow(
+private fun SettingsNavRow(
     icon: ImageVector,
     title: String,
-    value: String,
+    value: String? = null,
+    highlightValue: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(14.dp),
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = SahasraAccent,
-            modifier = Modifier.size(22.dp)
+            tint = KurotsukiTextSecondary,
+            modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.SemiBold,
-                color = SahasraTextPrimary
+                color = KurotsukiTextPrimary
             ),
             modifier = Modifier.weight(1f)
         )
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(SahasraElevated)
-                .border(1.dp, SahasraBorder, RoundedCornerShape(8.dp))
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
+        if (value != null) {
             Text(
                 text = value,
-                color = SahasraAccent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = if (highlightValue) KurotsukiRed else KurotsukiTextSecondary,
+                    fontWeight = if (highlightValue) FontWeight.Bold else FontWeight.Normal,
+                    fontSize = 12.sp
+                )
             )
+            Spacer(modifier = Modifier.width(4.dp))
         }
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = KurotsukiTextSecondary,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
 @Composable
-private fun SettingsActionRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = SahasraAccent,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = SahasraTextPrimary
-                )
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = SahasraTextSecondary,
-                    fontSize = 11.sp
-                )
-            )
-        }
-    }
+private fun DividerLine() {
+    HorizontalDivider(
+        color = KurotsukiBorder.copy(alpha = 0.6f),
+        thickness = 0.5.dp,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
 }

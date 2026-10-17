@@ -50,3 +50,16 @@ val AnikkuTextMuted = Color(0xFF64748B)
 val AnikkuEmerald = Color(0xFF10B981)
 val AnikkuAmber = Color(0xFFF59E0B)
 
+// Kurotsuki Flagship Design Tokens (Crimson Blood Moon + Dark Obsidian from Blueprint)
+val KurotsukiRed = Color(0xFFE53935)
+val KurotsukiRedDark = Color(0xFFB71C1C)
+val KurotsukiRedGlow = Color(0x33E53935)
+val KurotsukiBg = Color(0xFF08090B)
+val KurotsukiSurface = Color(0xFF11141B)
+val KurotsukiElevated = Color(0xFF181C26)
+val KurotsukiBorder = Color(0xFF222736)
+val KurotsukiTextPrimary = Color(0xFFFFFFFF)
+val KurotsukiTextSecondary = Color(0xFF9CA3AF)
+val KurotsukiStar = Color(0xFFFFB800)
+
+

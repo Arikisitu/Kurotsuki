@@ -19,6 +19,7 @@ import com.sahasra.app.SahasraApplication
 import com.sahasra.app.ui.detail.AnimeDetailScreen
 import com.sahasra.app.ui.detail.AnimeDetailViewModel
 import com.sahasra.app.ui.detail.MangaDetailScreen
+import com.sahasra.app.ui.downloads.DownloadsScreen
 import com.sahasra.app.ui.explore.ExploreScreen
 import com.sahasra.app.ui.explore.ExploreViewModel
 import com.sahasra.app.ui.home.HomeScreen
@@ -31,6 +32,8 @@ import com.sahasra.app.ui.schedule.ScheduleScreen
 import com.sahasra.app.ui.search.SearchScreen
 import com.sahasra.app.ui.search.SearchViewModel
 import com.sahasra.app.ui.settings.SettingsScreen
+import com.sahasra.app.ui.sources.AnimeSourcesScreen
+import com.sahasra.app.ui.splash.SplashScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -44,11 +47,20 @@ fun SahasraNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Splash.route,
         modifier = modifier.padding(paddingValues),
         enterTransition = { fadeIn() },
         exitTransition = { fadeOut() }
     ) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Home.route) {
             val homeViewModel = remember { HomeViewModel(app.animeRepository, app.mangaRepository) }
             HomeScreen(
@@ -128,8 +140,32 @@ fun SahasraNavHost(
             )
         }
 
+        composable(Screen.Downloads.route) {
+            DownloadsScreen(
+                onItemClick = { itemId ->
+                    when (itemId) {
+                        "solo_leveling" -> navController.navigate(Screen.AnimeDetail.createRoute(151807))
+                        "jjk" -> navController.navigate(Screen.AnimeDetail.createRoute(113415))
+                        "demon_slayer" -> navController.navigate(Screen.AnimeDetail.createRoute(101922))
+                        "berserk" -> navController.navigate(Screen.MangaDetail.createRoute(30002))
+                        "chainsaw_man" -> navController.navigate(Screen.MangaDetail.createRoute(105778))
+                        "one_piece" -> navController.navigate(Screen.MangaDetail.createRoute(30013))
+                    }
+                }
+            )
+        }
+
         composable(Screen.Settings.route) {
             SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAnimeSourcesClick = {
+                    navController.navigate(Screen.AnimeSources.route)
+                }
+            )
+        }
+
+        composable(Screen.AnimeSources.route) {
+            AnimeSourcesScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
